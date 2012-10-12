@@ -1,14 +1,12 @@
 package backend;
 
-import datastructure.*;
+import datastructure.Cell;
+import datastructure.Grid;
 
 public class MainSolver {
-	public Grid gameGrid;
 	private int rowSize, colSize;
 	
 	public MainSolver(Grid g){
-		this.gameGrid = g;
-		rowSize = g.getRows();
 		colSize = g.getColumns();
 	}
 	
@@ -17,7 +15,7 @@ public class MainSolver {
 	}
 	
 	public void basicSolver(){
-		Cell[][] cellLst = gameGrid.cellLst;
+		Cell[][] cellLst = Grid.cellLst;
 		Cell tmpCell;
 		int i, j;
 		
@@ -301,7 +299,7 @@ public class MainSolver {
 			}
 			break;
 			case 2:{
-				Cell[][] tmpCellList = gameGrid.cellLst;
+				Cell[][] tmpCellList = Grid.cellLst;
 				if(x == 0 && y == 0){
 					if(!tmpCellList[1][0].getLeftWall().getFixed())
 						tmpCellList[1][0].getLeftWall().setFixed(true, true);
