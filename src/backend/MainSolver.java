@@ -400,16 +400,17 @@ public class MainSolver {
 				if(tmpCell.getIsColored()){
 					color = tmpCell.getCellColor() != 1 ? 1 : 2;
 					if(checkBounds(i-1, j) && tmpCell.getTopWall().getIsActive())
-						tmpCell.setCellColor(color, true);
+						cellLst[i-1][j].setCellColor(color, true);
 					if(checkBounds(i+1, j) && tmpCell.getBottomWall().getIsActive())
-						tmpCell.setCellColor(color, true);
+						cellLst[i+1][j].setCellColor(color, true);
 					if(checkBounds(i, j+1) && tmpCell.getRightWall().getIsActive())
-						tmpCell.setCellColor(color, true);
+						cellLst[i][j+1].setCellColor(color, true);
 					if(checkBounds(i, j-1) && tmpCell.getLeftWall().getIsActive())
-						tmpCell.setCellColor(color, true);
+						cellLst[i][j-1].setCellColor(color, true);
 				}
 				else{
-					
+					//if(checkBounds(i-1, j) && cellLst[i-1][j].getCellColor() != 0 && tmpCell.getTopWall().getIsActive())
+						//tmpCell.
 				}
 			}
 		}
