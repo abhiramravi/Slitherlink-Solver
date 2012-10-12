@@ -63,12 +63,9 @@ public class SlitherLinkBoard extends JFrame
 	private Border defaultBorder = BorderFactory.createLineBorder(Color.LIGHT_GRAY);
 	
 	/* Modify this function to get the border width correctly */
-	private Border getActiveBorder(boolean horiz)
+	private Border getActiveBorder(int[] a)
 	{
-		if(horiz)
-			return BorderFactory.createMatteBorder(3, 0, 0, 0, Color.GREEN);
-		else
-			return BorderFactory.createMatteBorder(0, 3, 0, 0, Color.GREEN);
+			return BorderFactory.createMatteBorder(a[0], a[1], a[2], a[3], Color.GREEN);
 	}
 	
 	/* The Main constructor */
@@ -90,6 +87,7 @@ public class SlitherLinkBoard extends JFrame
           c.add(pnlMain);
           
           drawBoard();
+          //pnlCells[4][0].setBorder(getActiveBorder(false));
           printWalls();
           
           show();
@@ -113,29 +111,44 @@ public class SlitherLinkBoard extends JFrame
                        pnlCells[y][x].setBorder(defaultBorder);
                  }
      }
+	 
+	 private int stroke = 3;
+	 private int[][][] colors;
 	 private void printWalls()
 	 {
+		 colors = new int[gridRows][gridCols][4];
 		 Vector<Wall> wList = Grid.getAllWalls();
 		 for(Wall w : wList)
 		 {
 			 if(w.getIsActive())
 			 {
 				 Coordinate c = w.getWallStart();
+				 System.out.println("X = " + c.getX() + "; Y = " + c.getY());
 				 if(w.getHorzn())
 				 {
 					 if(c.getX() < gridRows)
-						 pnlCells[c.getX()][ c.getY()].setBorder(getActiveBorder(true));
+					 {
+						 colors[c.getX()][c.getY()][0] = stroke;
+						 pnlCells[c.getX()][ c.getY()].setBorder(getActiveBorder(colors[c.getX()][c.getY()]));
+					 }
 					 else
 					 {
-						 pnlCells[c.getX()-1][c.getY()].setBorder(BorderFactory.createMatteBorder(0, 0, 3, 0, Color.GREEN));
+						 colors[c.getX()-1][c.getY()][2] = stroke;
+						 pnlCells[c.getX()-1][c.getY()].setBorder(getActiveBorder(colors[c.getX()-1][c.getY()]));
 					 }
 				 }
 				 else
 				 {
 					 if(c.getY() < gridCols)
-						 pnlCells[c.getX()][ c.getY()].setBorder(getActiveBorder(false));
+					 {
+						 colors[c.getX()][c.getY()][1] = stroke;
+						 pnlCells[c.getX()][ c.getY()].setBorder(getActiveBorder(colors[c.getX()][c.getY()]));
+					 }
 					 else
-						 pnlCells[c.getX()][c.getY()-1].setBorder(BorderFactory.createMatteBorder(0, 0, 0, 3, Color.GREEN));
+					 {
+						 colors[c.getX()][c.getY()-1][3] = stroke;
+						 pnlCells[c.getX()][c.getY()-1].setBorder(getActiveBorder(colors[c.getX()][c.getY()-1]));
+					 }
 				 }
 			 }
 		 }
