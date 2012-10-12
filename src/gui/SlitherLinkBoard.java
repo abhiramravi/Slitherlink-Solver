@@ -19,6 +19,8 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.border.Border;
 
+import backend.MainSolver;
+
 import datastructure.Coordinate;
 import datastructure.Grid;
 import datastructure.Wall;
@@ -37,6 +39,7 @@ public class SlitherLinkBoard extends JFrame
 		FR.init(System.in);
 		getInput();
 		Grid.updateCellList(gridRows, gridCols, input);
+		MainSolver.basicSolver();
         final SlitherLinkBoard slb = new SlitherLinkBoard(gridRows, gridCols);
     }
 	
@@ -120,11 +123,19 @@ public class SlitherLinkBoard extends JFrame
 				 Coordinate c = w.getWallStart();
 				 if(w.getHorzn())
 				 {
-					 pnlCells[c.getX()][ c.getY()].setBorder(getActiveBorder(true));
+					 if(c.getX() < gridRows)
+						 pnlCells[c.getX()][ c.getY()].setBorder(getActiveBorder(true));
+					 else
+					 {
+						 pnlCells[c.getX()-1][c.getY()].setBorder(BorderFactory.createMatteBorder(0, 0, 3, 0, Color.GREEN));
+					 }
 				 }
 				 else
 				 {
-					 pnlCells[c.getX()][ c.getY()].setBorder(getActiveBorder(false));
+					 if(c.getY() < gridCols)
+						 pnlCells[c.getX()][ c.getY()].setBorder(getActiveBorder(false));
+					 else
+						 pnlCells[c.getX()][c.getY()-1].setBorder(BorderFactory.createMatteBorder(0, 0, 0, 3, Color.GREEN));
 				 }
 			 }
 		 }
