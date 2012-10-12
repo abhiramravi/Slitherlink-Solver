@@ -14,9 +14,9 @@ public class Cell {
 		this.setCellColor(0);
 		this.setIsColored(false);
 		this.noCellOppColor = 0;
-		this.setRightWall(new Wall(new Coordinate(pos.getX(), pos.getY()), false));
+		this.setRightWall(new Wall(new Coordinate(pos.getX(), pos.getY()+1), false));
 		this.setTopWall(new Wall(new Coordinate(pos.getX(), pos.getY()), true));
-		this.setLeftWall(new Wall(new Coordinate(pos.getX(), pos.getY()+1), false));
+		this.setLeftWall(new Wall(new Coordinate(pos.getX(), pos.getY()), false));
 		this.setBottomWall(new Wall(new Coordinate(pos.getX()+1, pos.getY()), true));
 	}
 	
