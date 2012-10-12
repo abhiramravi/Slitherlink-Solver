@@ -4,19 +4,17 @@ import datastructure.Cell;
 import datastructure.Grid;
 
 public class MainSolver {
-	private int rowSize, colSize;
-	private Cell[][] cellLst = Grid.cellLst;
+	private static int rowSize, colSize;
+	private static Cell[][] cellLst = Grid.cellLst;
 	
-	public MainSolver(){
-		rowSize = Grid.getRows();
-		colSize = Grid.getColumns();
-	}
 	
-	private boolean checkBounds(int x, int y){
+	private static boolean checkBounds(int x, int y){
 		return ( x < 0 || y < 0 || x >= rowSize || y >= colSize) ? false :  true;
 	}
 	
-	public void basicSolver(){
+	public static void basicSolver(){
+		rowSize = Grid.getRows();
+		colSize = Grid.getColumns();
 		Cell tmpCell;
 		int i, j;
 		
@@ -241,7 +239,7 @@ public class MainSolver {
 		
 	}
 	
-	public void handleCorner(Cell tmpCell){
+	public static void handleCorner(Cell tmpCell){
 		int x = tmpCell.getPosition().getX();
 		int y = tmpCell.getPosition().getY();
 		switch(tmpCell.getNodeVal()){
@@ -332,7 +330,7 @@ public class MainSolver {
 		ColorCells();
 	}
 	
-	private void ColorCells(){
+	private static void ColorCells(){
 		int i, j;
 		/*
 		 * Coloring Cells if the is a border Wall is set Alive with color '2'
