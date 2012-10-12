@@ -75,4 +75,8 @@ public class Cell {
 	public void setIsColored(boolean b) {
 		this.isColored = b;
 	}
+	public void setCellColor(int color, boolean b){
+		this.cellColor = color;
+		this.isColored = b;
+	}
 }
