@@ -410,6 +410,9 @@ public class MainSolver {
 					if(checkBounds(i, j-1) && tmpCell.getLeftWall().getIsActive())
 						tmpCell.setCellColor(color, true);
 				}
+				else{
+					
+				}
 			}
 		}
 	}
