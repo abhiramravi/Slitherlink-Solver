@@ -11,12 +11,17 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.StringTokenizer;
+import java.util.Vector;
 
 import javax.swing.BorderFactory;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.border.Border;
+
+import datastructure.Coordinate;
+import datastructure.Grid;
+import datastructure.Wall;
 
 public class SlitherLinkBoard extends JFrame
 {
@@ -31,6 +36,7 @@ public class SlitherLinkBoard extends JFrame
     {
 		FR.init(System.in);
 		getInput();
+		Grid.updateCellList(gridRows, gridCols, input);
         final SlitherLinkBoard slb = new SlitherLinkBoard(gridRows, gridCols);
     }
 	
@@ -54,9 +60,12 @@ public class SlitherLinkBoard extends JFrame
 	private Border defaultBorder = BorderFactory.createLineBorder(Color.LIGHT_GRAY);
 	
 	/* Modify this function to get the border width correctly */
-	private Border getActiveBorder()
+	private Border getActiveBorder(boolean horiz)
 	{
-		return BorderFactory.createMatteBorder(2, 0, 2, 0, Color.BLACK);
+		if(horiz)
+			return BorderFactory.createMatteBorder(3, 0, 0, 0, Color.GREEN);
+		else
+			return BorderFactory.createMatteBorder(0, 3, 0, 0, Color.GREEN);
 	}
 	
 	/* The Main constructor */
@@ -78,9 +87,8 @@ public class SlitherLinkBoard extends JFrame
           c.add(pnlMain);
           
           drawBoard();
-          //---------
-          pnlCells[2][2].setBorder(getActiveBorder());
-          //--------
+          printWalls();
+          
           show();
     }
 	
@@ -102,6 +110,25 @@ public class SlitherLinkBoard extends JFrame
                        pnlCells[y][x].setBorder(defaultBorder);
                  }
      }
+	 private void printWalls()
+	 {
+		 Vector<Wall> wList = Grid.getAllWalls();
+		 for(Wall w : wList)
+		 {
+			 if(w.getIsActive())
+			 {
+				 Coordinate c = w.getWallStart();
+				 if(w.getHorzn())
+				 {
+					 pnlCells[c.getX()][ c.getY()].setBorder(getActiveBorder(true));
+				 }
+				 else
+				 {
+					 pnlCells[c.getX()][ c.getY()].setBorder(getActiveBorder(false));
+				 }
+			 }
+		 }
+	 }
 }
 
 class FR
