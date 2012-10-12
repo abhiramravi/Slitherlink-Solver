@@ -24,13 +24,13 @@ public class Grid {
 	/*
 	 * Getter Methods
 	 */
-	public int getRows(){
+	public static int getRows(){
 		return noRows;
 	}
-	public int getColumns(){
+	public static int getColumns(){
 		return noColumns;
 	}
-	public boolean getisSolvedr(){
+	public static boolean getisSolvedr(){
 		return isSolved;
 	}
 	
