@@ -1,10 +1,11 @@
 package datastructure;
 
-
 public class Wall {
 
 	private Coordinate wallStart, wallEnd;
-	/* Fixed - the property of the wall is fixed. If it is not present, it will not be present forever. and the other way */
+	/* 
+	 Fixed - the property of the wall is fixed. If it is not present, it will not be present forever. and the other way 
+	 */
 	private boolean Horzn, isActive, fixed;
 	
 	public Wall(Coordinate wstrt, boolean type) {

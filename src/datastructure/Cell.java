@@ -3,17 +3,23 @@ package datastructure;
 public class Cell {
 	private Wall topWall, bottomWall, rightWall, leftWall;
 	private int nodeVal;
-	private Coordinate position;			//Left Top Co-ordinates
+	private Coordinate position;		//Left Top Co-ordinates
+	private int cellColor;				// 0 - no color ; 1 - outer part ; 2 - inner part
+	public int noCellOppColor;
+	private boolean isColored;
 	
 	public Cell(int val, Coordinate pos){
 		this.setNodeVal(val);
 		this.setPosition(pos);
+		this.setCellColor(0);
+		this.setIsColored(false);
+		this.noCellOppColor = 0;
 		this.setRightWall(new Wall(new Coordinate(pos.getX(), pos.getY()), false));
 		this.setTopWall(new Wall(new Coordinate(pos.getX(), pos.getY()), true));
 		this.setLeftWall(new Wall(new Coordinate(pos.getX(), pos.getY()+1), false));
 		this.setBottomWall(new Wall(new Coordinate(pos.getX()+1, pos.getY()), true));
 	}
-
+	
 	/*
 	 * Getter Methods
 	 */
@@ -34,6 +40,12 @@ public class Cell {
 	}
 	public Coordinate getPosition(){
 		return this.position;
+	}
+	public int getCellColor(){
+		return this.cellColor;
+	}
+	public boolean getIsColored(){
+		return this.isColored;
 	}
 	
 	/*
@@ -56,5 +68,11 @@ public class Cell {
 	}
 	private void setRightWall(Wall wall) {
 		this.rightWall = wall;
+	}
+	public void setCellColor(int color){
+		this.cellColor = color;
+	}
+	public void setIsColored(boolean b) {
+		this.isColored = b;
 	}
 }

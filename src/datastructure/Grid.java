@@ -38,7 +38,7 @@ public class Grid {
 	 * Function to get the Set of all the Wall in random order
 	 * @return : Wall List of the Grid
 	 */
-	public Vector<Wall> getAllWalls(){
+	public static Vector<Wall> getAllWalls(){
 		Vector<Wall> wallLst = new Vector<Wall>(2*(noRows+1)*(noColumns+1));
 		int i, j;
 		for( i = 0; i < noRows; ++i)
@@ -60,9 +60,9 @@ public class Grid {
 	 * @param cols : Number of columns in the grid
 	 * @param inpCellVal : The Game board input numbers
 	 */
-	public void updateCellList(int rows, int cols, int[][] inpCellVal){
-		this.setRows(rows);
-		this.setColumn(cols);
+	public static void updateCellList(int rows, int cols, int[][] inpCellVal){
+		noRows = rows;
+		noColumns = cols;
 		cellLst = new Cell[noRows][noColumns];
 		int i, j;
 		for( i = 0; i < noRows; ++i)

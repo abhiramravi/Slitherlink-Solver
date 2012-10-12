@@ -5,6 +5,7 @@ import datastructure.Grid;
 
 public class MainSolver {
 	private int rowSize, colSize;
+	private Cell[][] cellLst = Grid.cellLst;
 	
 	public MainSolver(){
 		rowSize = Grid.getRows();
@@ -16,7 +17,6 @@ public class MainSolver {
 	}
 	
 	public void basicSolver(){
-		Cell[][] cellLst = Grid.cellLst;
 		Cell tmpCell;
 		int i, j;
 		
@@ -273,6 +273,7 @@ public class MainSolver {
 			}
 			break;
 			case 3:{
+				//tmpCell.setCellColor(1);
 				if(x == 0 && y == 0){
 					if(!tmpCell.getTopWall().getFixed())
 						tmpCell.getTopWall().setFixed(true, true);
@@ -328,6 +329,79 @@ public class MainSolver {
 			}
 			
 		}
+		ColorCells();
 	}
-
+	
+	private void ColorCells(){
+		int i;
+		/*
+		 * Coloring Cells if the is a border Wall is set Alive with color '2'
+		 */
+		for( i = 0 ; i < colSize; ++i){
+			if(cellLst[0][i].getTopWall().getIsActive() && !cellLst[0][i].getIsColored()){
+				cellLst[0][i].setCellColor(2);
+				cellLst[0][i].setIsColored(true);
+			}
+			if(cellLst[rowSize-1][i].getBottomWall().getIsActive() && !cellLst[rowSize-1][i].getIsColored()){
+				cellLst[rowSize-1][i].setCellColor(2);
+				cellLst[rowSize-1][i].setIsColored(true);
+			}
+		}
+		for( i = 1; i < rowSize-1; ++i){
+			if(cellLst[i][0].getLeftWall().getIsActive() && !cellLst[i][0].getIsColored()){
+				cellLst[i][0].setCellColor(2);
+				cellLst[i][0].setIsColored(true);
+			}
+			if(cellLst[i][colSize-1].getRightWall().getIsActive() && !cellLst[i][colSize-1].getIsColored()){
+				cellLst[i][colSize-1].setCellColor(2);
+				cellLst[i][colSize-1].setIsColored(true);
+			}
+		}
+		
+		/*
+		 * Coloring the '0' cells present in the border along with its neighbors with color '1' 
+		 */
+		for( i = 0; i < colSize; ++i){
+			if(cellLst[0][i].getNodeVal() == 0 && !cellLst[0][i].getIsColored()){
+				cellLst[0][i].setCellColor(1);
+				cellLst[0][i].setIsColored(true);
+				cellLst[1][i].setCellColor(1);
+				if(checkBounds(0, i+1))
+					cellLst[0][i+1].setCellColor(1);
+				if(checkBounds(0, i-1))
+					cellLst[0][i-1].setCellColor(1);
+			}
+			if(cellLst[rowSize-1][i].getNodeVal() == 0 && !cellLst[rowSize-1][i].getIsColored()){
+				cellLst[rowSize-1][i].setCellColor(1);
+				cellLst[rowSize-1][i].setIsColored(true);
+				cellLst[rowSize-2][i].setCellColor(1);
+				if(checkBounds(rowSize-1, i-1))
+					cellLst[rowSize-1][i-1].setCellColor(1);
+				if(checkBounds(rowSize-1, i+1))
+					cellLst[rowSize-1][i+1].setCellColor(1);
+			}
+		}
+		
+		for( i = 1; i < rowSize-1; ++i){
+			if(cellLst[i][0].getNodeVal() == 0 && !cellLst[i][0].getIsColored()){
+				cellLst[i][0].setCellColor(1);
+				cellLst[i][0].setIsColored(true);
+				cellLst[i][1].setCellColor(1);
+				if(checkBounds(i+1, 0))
+					cellLst[i+1][0].setCellColor(1);
+				if(checkBounds(i-1, 0))
+					cellLst[i-1][0].setCellColor(1);
+			}
+			if(cellLst[i][colSize-1].getNodeVal() == 0 && !cellLst[i][colSize-1].getIsColored()){
+				cellLst[i][colSize-1].setCellColor(1);
+				cellLst[i][colSize-1].setIsColored(true);
+				cellLst[i][colSize-2].setCellColor(1);
+				if(checkBounds(i-1, colSize-1))
+					cellLst[i-1][colSize-1].setCellColor(1);
+				if(checkBounds(i+1, colSize-1))
+					cellLst[i+1][colSize-1].setCellColor(1);
+			}
+		}
+		
+	}
 }
