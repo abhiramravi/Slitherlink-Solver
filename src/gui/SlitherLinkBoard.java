@@ -4,20 +4,17 @@ package gui;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Container;
-import java.awt.Dimension;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
+import java.awt.Font;
 import java.awt.GridLayout;
-import java.awt.Insets;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.util.Random;
 import java.util.StringTokenizer;
 
 import javax.swing.BorderFactory;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.border.Border;
 
@@ -94,6 +91,12 @@ public class SlitherLinkBoard extends JFrame
                  for (int x = 0; x < gridCols; x++)
                  {
                        pnlCells[y][x] = new JPanel(new BorderLayout());
+                       /* Setting the numbers to be printed */
+                       JLabel j = new JLabel(Integer.toString(input[y][x]));
+                       j.setFont(new Font("Arial", Font.BOLD, 20));
+                       j.setHorizontalAlignment(JLabel.CENTER);
+                       pnlCells[y][x].add(j, BorderLayout.CENTER);
+                       
                        pnlMain.add(pnlCells[y][x]);
                        pnlCells[y][x].setBackground(new Color(255, 255, 255));
                        pnlCells[y][x].setBorder(defaultBorder);
