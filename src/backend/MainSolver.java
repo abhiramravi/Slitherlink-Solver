@@ -17,7 +17,7 @@ public class MainSolver {
 	}
 	
 	public void basicSolver(){
-		Cell[][] cellLst = gameGrid.cellLst;
+		Cell[][] cellLst = Grid.cellLst;
 		Cell tmpCell;
 		int i, j;
 		

@@ -1,16 +1,19 @@
 package datastructure;
 
+import java.util.ArrayList;
+
 public class Grid {
 	
 	private int noRows;
 	private int noColumns;
 	private boolean isSolved;
-	public Cell[][] cellLst;
+	
+	public static Cell[][] cellLst;
 	
 	public Grid(int rows, int cols){
 		this.setRows(rows);
 		this.setColumn(cols);
-		this.cellLst = new Cell[this.noRows][this.noColumns];
+		cellLst = new Cell[this.noRows][this.noColumns];
 		this.isSolved = false;
 	}
 	
