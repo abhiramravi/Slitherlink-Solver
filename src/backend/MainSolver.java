@@ -6,8 +6,9 @@ import datastructure.Grid;
 public class MainSolver {
 	private int rowSize, colSize;
 	
-	public MainSolver(Grid g){
-		colSize = g.getColumns();
+	public MainSolver(){
+		rowSize = Grid.getRows();
+		colSize = Grid.getColumns();
 	}
 	
 	private boolean checkBounds(int x, int y){
