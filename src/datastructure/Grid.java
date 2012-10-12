@@ -8,6 +8,7 @@ public class Grid {
 	private static int noColumns;
 	private static boolean isSolved;
 	public static Cell[][] cellLst;
+
 	
 	/*
 	 * Setter Methods
