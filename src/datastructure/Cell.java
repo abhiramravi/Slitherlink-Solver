@@ -5,7 +5,7 @@ public class Cell {
 	private int nodeVal;
 	private Coordinate position;		//Left Top Co-ordinates
 	private int cellColor;				// 0 - no color ; 1 - outer part ; 2 - inner part
-	public int noCellOppColor;
+	//public int noCellOppColor;
 	private boolean isColored;
 	
 	public Cell(int val, Coordinate pos){
@@ -13,7 +13,7 @@ public class Cell {
 		this.setPosition(pos);
 		this.setCellColor(0);
 		this.setIsColored(false);
-		this.noCellOppColor = 0;
+		//this.noCellOppColor = 0;
 		this.setRightWall(new Wall(new Coordinate(pos.getX(), pos.getY()+1), false));
 		if(pos.getX()!=0)
 			this.setTopWall(Grid.cellLst[pos.getX()-1][pos.getY()].getBottomWall());
