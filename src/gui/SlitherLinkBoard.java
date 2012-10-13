@@ -99,9 +99,13 @@ public class SlitherLinkBoard extends JFrame
 		{
 			for(int j = 0; j < gridCols; j++)
 			{
-				if(Grid.cellLst[i][j].getIsColored())
+				if(Grid.cellLst[i][j].getCellColor() == 1)
 				{
 					pnlCells[i][j].setBackground(Color.ORANGE);
+				}
+				if(Grid.cellLst[i][j].getCellColor() == 2)
+				{
+					pnlCells[i][j].setBackground(Color.LIGHT_GRAY);
 				}
 			}
 		}
