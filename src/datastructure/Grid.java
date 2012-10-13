@@ -39,7 +39,7 @@ public class Grid {
 	 * @return : Wall List of the Grid
 	 */
 	public static Vector<Wall> getAllWalls(){
-		Vector<Wall> wallLst = new Vector<Wall>(2*(noRows+1)*(noColumns+1));
+		Vector<Wall> wallLst = new Vector<Wall>(2*noRows*noColumns + noColumns + noRows);
 		int i, j;
 		for( i = 0; i < noRows; ++i)
 			wallLst.add(cellLst[i][0].getLeftWall());

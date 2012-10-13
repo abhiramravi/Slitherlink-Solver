@@ -15,8 +15,14 @@ public class Cell {
 		this.setIsColored(false);
 		this.noCellOppColor = 0;
 		this.setRightWall(new Wall(new Coordinate(pos.getX(), pos.getY()+1), false));
-		this.setTopWall(new Wall(new Coordinate(pos.getX(), pos.getY()), true));
-		this.setLeftWall(new Wall(new Coordinate(pos.getX(), pos.getY()), false));
+		if(pos.getX()!=0)
+			this.setTopWall(Grid.cellLst[pos.getX()-1][pos.getY()].getBottomWall());
+		else
+			this.setTopWall(new Wall(new Coordinate(pos.getX(), pos.getY()), true));
+		if(pos.getY()!=0)
+			this.setLeftWall(Grid.cellLst[pos.getX()][pos.getY()-1].getRightWall());
+		else
+			this.setLeftWall(new Wall(new Coordinate(pos.getX(), pos.getY()), false));
 		this.setBottomWall(new Wall(new Coordinate(pos.getX()+1, pos.getY()), true));
 	}
 	

@@ -19,6 +19,7 @@ public class MainSolver {
 		int i, j;
 		
 		/*
+		 * Works!
 		 * Checking for '0' in the grid.
 		 * Setting all the four edges of those cells to 'Fixed' and 'Not Active'.  
 		 */
@@ -34,6 +35,7 @@ public class MainSolver {
 		}
 		
 		/*
+		 * Works!
 		 * Checking for Adjacent '0' and '3'
 		 * Setting all the edges other than the sharing edge to 'Fixed' and 'Active'.
 		 */
@@ -48,12 +50,12 @@ public class MainSolver {
 							tmpCell.getLeftWall().setFixed(true, true);
 						if(!tmpCell.getRightWall().getFixed())
 							tmpCell.getRightWall().setFixed(true, true);
-						if(checkBounds(i, j-1) && !tmpCell.getBottomWall().getFixed())
-							tmpCell.getBottomWall().setFixed(true, true);
-						if(checkBounds(i, j+1) && !tmpCell.getBottomWall().getFixed())
-							tmpCell.getBottomWall().setFixed(true, true);
+						if(checkBounds(i, j-1) && !cellLst[i][j-1].getBottomWall().getFixed())
+							cellLst[i][j-1].getBottomWall().setFixed(true, true);
+						if(checkBounds(i, j+1) && !cellLst[i][j+1].getBottomWall().getFixed())
+							cellLst[i][j+1].getBottomWall().setFixed(true, true);
 					}
-					if(checkBounds(i-1, j) && cellLst[i][j].getNodeVal() == 3){
+					if(checkBounds(i-1, j) && cellLst[i-1][j].getNodeVal() == 3){
 						tmpCell = cellLst[i-1][j];
 						if(!tmpCell.getTopWall().getFixed())
 							tmpCell.getTopWall().setFixed(true, true);
@@ -62,9 +64,9 @@ public class MainSolver {
 						if(!tmpCell.getRightWall().getFixed())
 							tmpCell.getRightWall().setFixed(true, true);
 						if(checkBounds(i, j-1) && !cellLst[i][j-1].getTopWall().getFixed())
-							tmpCell.getTopWall().setFixed(true, true);
+							cellLst[i][j-1].getTopWall().setFixed(true, true);
 						if(checkBounds(i, j+1) && !cellLst[i][j+1].getTopWall().getFixed())
-							tmpCell.getTopWall().setFixed(true, true);
+							cellLst[i][j+1].getTopWall().setFixed(true, true);
 					}
 					if(checkBounds(i, j-1) && cellLst[i][j-1].getNodeVal() == 3){
 						tmpCell = cellLst[i][j-1];
@@ -75,9 +77,9 @@ public class MainSolver {
 						if(!tmpCell.getBottomWall().getFixed())
 							tmpCell.getBottomWall().setFixed(true, true);
 						if(checkBounds(i+1, j) && !cellLst[i+1][j].getLeftWall().getFixed())
-							tmpCell.getLeftWall().setFixed(true, true);
+							cellLst[i+1][j].getLeftWall().setFixed(true, true);
 						if(checkBounds(i-1, j) && !cellLst[i-1][j].getLeftWall().getFixed())
-							tmpCell.getLeftWall().setFixed(true, true);
+							cellLst[i-1][j].getLeftWall().setFixed(true, true);
 					}
 					if(checkBounds(i, j+1) && cellLst[i][j+1].getNodeVal() == 3){
 						tmpCell = cellLst[i][j+1];
@@ -88,15 +90,16 @@ public class MainSolver {
 						if(!tmpCell.getBottomWall().getFixed())
 							tmpCell.getBottomWall().setFixed(true, true);
 						if(checkBounds(i+1, j) && !cellLst[i+1][j].getRightWall().getFixed())
-							tmpCell.getRightWall().setFixed(true, true);
+							cellLst[i+1][j].getRightWall().setFixed(true, true);
 						if(checkBounds(i-1, j) && !cellLst[i-1][j].getRightWall().getFixed())
-							tmpCell.getRightWall().setFixed(true, true);
+							cellLst[i-1][j].getRightWall().setFixed(true, true);
 					}			
 				}
 			}
 		}
 		
 		/*
+		 * Works!
 		 * Checking for Diagonal '0' and '3'
 		 * Setting the two edges incident at the common corner ( of 0 and 3 ) to 'Fixed' and 'Active' 
 		 */
@@ -136,6 +139,7 @@ public class MainSolver {
 		}
 		
 		/*
+		 * Works!
 		 * Checking for Two Adjacent 3's
 		 * Setting the sharing edge and the two other parallel edges to it to 'Fixed' and 'Active' 
 		 */
@@ -179,6 +183,7 @@ public class MainSolver {
 		}
 		
 		/*
+		 * Works!
 		 * Checking for 2 Diagonal 3's
 		 * Setting the outermost opposite edges ( 2 per cell ) to 'Fixed' and 'Active'
 		 */
@@ -239,6 +244,10 @@ public class MainSolver {
 		
 	}
 	
+	/*
+	 * Works like a charm!
+	 * To handle the numbers present in the corners of the grid
+	 */
 	public static void handleCorner(Cell tmpCell){
 		int x = tmpCell.getPosition().getX();
 		int y = tmpCell.getPosition().getY();
@@ -333,7 +342,7 @@ public class MainSolver {
 	private static void ColorCells(){
 		int i, j;
 		/*
-		 * Coloring Cells if the is a border Wall is set Alive with color '2'
+		 * Coloring Cells if the is a border Wall is set Alive, with color '2'
 		 */
 		for( i = 0 ; i < colSize; ++i){
 			if(cellLst[0][i].getTopWall().getIsActive() && !cellLst[0][i].getIsColored())
@@ -397,20 +406,26 @@ public class MainSolver {
 		for( i = 0; i < rowSize; ++i){
 			for( j = 0; j < colSize; ++j){
 				tmpCell = cellLst[i][j];
-				if(tmpCell.getIsColored()){
+				if(tmpCell.getCellColor() != 0){
 					color = tmpCell.getCellColor() != 1 ? 1 : 2;
-					if(checkBounds(i-1, j) && tmpCell.getTopWall().getIsActive())
+					if(checkBounds(i-1, j) && tmpCell.getTopWall().getIsActive() && cellLst[i-1][j].getCellColor() == 0)
 						cellLst[i-1][j].setCellColor(color, true);
-					if(checkBounds(i+1, j) && tmpCell.getBottomWall().getIsActive())
+					if(checkBounds(i+1, j) && tmpCell.getBottomWall().getIsActive() && cellLst[i+1][j].getCellColor() == 0)
 						cellLst[i+1][j].setCellColor(color, true);
-					if(checkBounds(i, j+1) && tmpCell.getRightWall().getIsActive())
+					if(checkBounds(i, j+1) && tmpCell.getRightWall().getIsActive() && cellLst[i][j+1].getCellColor() == 0)
 						cellLst[i][j+1].setCellColor(color, true);
-					if(checkBounds(i, j-1) && tmpCell.getLeftWall().getIsActive())
+					if(checkBounds(i, j-1) && tmpCell.getLeftWall().getIsActive() && cellLst[i][j-1].getCellColor() == 0)
 						cellLst[i][j-1].setCellColor(color, true);
 				}
 				else{
-					//if(checkBounds(i-1, j) && cellLst[i-1][j].getCellColor() != 0 && tmpCell.getTopWall().getIsActive())
-						//tmpCell.
+					if(checkBounds(i-1, j) && cellLst[i-1][j].getCellColor() != 0 && cellLst[i-1][j].getTopWall().getIsActive())
+						tmpCell.setCellColor(cellLst[i-1][j].getCellColor(), true);
+					else if(checkBounds(i+1, j) && cellLst[i+1][j].getCellColor() != 0 && cellLst[i+1][j].getTopWall().getIsActive())
+						tmpCell.setCellColor(cellLst[i+1][j].getCellColor(), true);
+					else if(checkBounds(i, j-1) && cellLst[i][j-1].getCellColor() != 0 && cellLst[i][j-1].getTopWall().getIsActive())
+						tmpCell.setCellColor(cellLst[i][j-1].getCellColor(), true);
+					else if(checkBounds(i, j+1) && cellLst[i][j+1].getCellColor() != 0 && cellLst[i][j+1].getTopWall().getIsActive())
+						tmpCell.setCellColor(cellLst[i][j+1].getCellColor(), true);
 				}
 			}
 		}
