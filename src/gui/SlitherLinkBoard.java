@@ -65,7 +65,7 @@ public class SlitherLinkBoard extends JFrame
 	/* Modify this function to get the border width correctly */
 	private Border getActiveBorder(int[] a)
 	{
-			return BorderFactory.createMatteBorder(a[0], a[1], a[2], a[3], Color.GREEN);
+			return BorderFactory.createMatteBorder(a[0], a[1], a[2], a[3], Color.MAGENTA);
 	}
 	
 	/* The Main constructor */
@@ -89,10 +89,23 @@ public class SlitherLinkBoard extends JFrame
           drawBoard();
           //pnlCells[4][0].setBorder(getActiveBorder(false));
           printWalls();
+          colorCells();
           
           show();
     }
-	
+	private void colorCells()
+	{
+		for(int i = 0; i < gridRows; i ++)
+		{
+			for(int j = 0; j < gridCols; j++)
+			{
+				if(Grid.cellLst[i][j].getIsColored())
+				{
+					pnlCells[i][j].setBackground(Color.ORANGE);
+				}
+			}
+		}
+	}
 	/* Drawing the default board on the screen. */
 	 private void drawBoard()
      {
