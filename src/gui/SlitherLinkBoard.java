@@ -101,11 +101,13 @@ public class SlitherLinkBoard extends JFrame
                  {
                        pnlCells[y][x] = new JPanel(new BorderLayout());
                        /* Setting the numbers to be printed */
-                       JLabel j = new JLabel(Integer.toString(input[y][x]));
-                       j.setFont(new Font("Arial", Font.BOLD, 20));
-                       j.setHorizontalAlignment(JLabel.CENTER);
-                       pnlCells[y][x].add(j, BorderLayout.CENTER);
-                       
+                       if(input[y][x]!=-1)
+                       {
+	                       JLabel j = new JLabel(Integer.toString(input[y][x]));
+	                       j.setFont(new Font("Arial", Font.BOLD, 20));
+	                       j.setHorizontalAlignment(JLabel.CENTER);
+	                       pnlCells[y][x].add(j, BorderLayout.CENTER);
+                       }
                        pnlMain.add(pnlCells[y][x]);
                        pnlCells[y][x].setBackground(new Color(255, 255, 255));
                        pnlCells[y][x].setBorder(defaultBorder);
