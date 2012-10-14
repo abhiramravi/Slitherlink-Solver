@@ -100,8 +100,11 @@ public class Cell implements Comparable<Cell>{
 
 	@Override
 	public int compareTo(Cell o) {
-		// TODO Auto-generated method stub
-		return (this.noAdjColored() > o.noAdjColored()) ? 1 : -1;
+		int i = this.noAdjColored();
+		int j = o.noAdjColored();
+		if(i!=j)
+			return i > j ? 1 : -1;
+		return 0;
 	}
 	
 	private int noAdjColored(){
