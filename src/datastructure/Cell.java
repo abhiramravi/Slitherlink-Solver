@@ -26,6 +26,12 @@ public class Cell {
 		this.setBottomWall(new Wall(new Coordinate(pos.getX()+1, pos.getY()), true));
 	}
 	
+	public Cell(int val){
+		this.setNodeVal(val);
+		this.setCellColor(0);
+		this.setIsColored(false);
+	}
+	
 	/*
 	 * Getter Methods
 	 */

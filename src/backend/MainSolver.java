@@ -1,19 +1,23 @@
 package backend;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import datastructure.Cell;
+import datastructure.Coordinate;
 import datastructure.Grid;
 
 public class MainSolver {
-	private static int rowSize, colSize;
+	private static int rowSize = Grid.getRows(), colSize = Grid.getColumns();
 	private static Cell[][] cellLst = Grid.cellLst;
+	private static Cell outerCell = new Cell(-1);
 	
 	private static boolean checkBounds(int x, int y){
 		return ( x < 0 || y < 0 || x >= rowSize || y >= colSize) ? false :  true;
 	}
 	
 	public static void basicSolver(){
-		rowSize = Grid.getRows();
-		colSize = Grid.getColumns();
+		outerCell.setCellColor(1, true);
 		Cell tmpCell;
 		int i, j;
 		
@@ -244,9 +248,17 @@ public class MainSolver {
 		/*
 		 * For coloring the cells to check whether its inside or outside the grid
 		 */
-		ColorCells();
-		colorLineSep();
-		drawLineColorSep();
+		colorBorderCells();
+		colorZeroCells();
+		colorTwoAdj();
+		colorOneAdj();
+		colorThreeAdj();
+		cellAroundCorner();
+		colorTwoAdj();
+		colorOneAdj();
+		colorThreeAdj();
+		colorOneAdj();
+		oneCellNotColored();
 	}
 	
 	/*
@@ -343,11 +355,11 @@ public class MainSolver {
 		}
 	}
 	
-	private static void ColorCells(){
+	/*
+	 * Coloring Cells if the is a border Wall is set Alive, with color '2'
+	 */
+	private static void colorBorderCells(){
 		int i;
-		/*
-		 * Coloring Cells if the is a border Wall is set Alive, with color '2'
-		 */
 		for( i = 0 ; i < colSize; ++i){
 			if(cellLst[0][i].getTopWall().getIsActive() && cellLst[0][i].getCellColor() == 0)
 				cellLst[0][i].setCellColor(2, true);
@@ -360,10 +372,80 @@ public class MainSolver {
 			if(cellLst[i][colSize-1].getRightWall().getIsActive() && cellLst[i][colSize-1].getCellColor() == 0)
 				cellLst[i][colSize-1].setCellColor(2, true);
 		}
-		
-		/*
-		 * Coloring the '0' cells present in the border along with its neighbors, with color '1' 
-		 */
+	}
+	
+	/*
+	 * Draw line between in border, if the Cell comes in 'Inside' part 
+	 */
+	
+	private static void colorBorderLines(){
+		int i;
+		for( i = 0 ; i < colSize; ++i){
+			if(cellLst[0][i].getCellColor() > 1)
+				cellLst[0][i].getTopWall().setFixed(true, true);
+			if(cellLst[rowSize-1][i].getCellColor() > 1)
+				cellLst[rowSize-1][i].getBottomWall().setFixed(true, true);
+		}
+		for( i = 0; i < rowSize; ++i){
+			if(cellLst[i][0].getCellColor() > 1)
+				cellLst[i][0].getLeftWall().setFixed(true, true);
+			if(cellLst[i][colSize-1].getCellColor() > 1)
+				cellLst[i][colSize-1].getRightWall().setFixed(true, true);
+		}
+	}
+	/*
+	 * Changing the color every time a line is crossed 
+	 */
+	private static void colorLineSep(){
+		int i, j, color;
+		Cell tmpCell;
+		for( i = 0; i < rowSize; ++i){
+			for( j = 0; j < colSize; ++j){
+				tmpCell = cellLst[i][j];
+				if(tmpCell.getCellColor() != 0){
+					color = tmpCell.getCellColor() != 1 ? 1 : 2;
+					if(checkBounds(i-1, j) && tmpCell.getTopWall().getIsActive() && cellLst[i-1][j].getCellColor() == 0)
+						cellLst[i-1][j].setCellColor(color, true);
+					if(checkBounds(i+1, j) && tmpCell.getBottomWall().getIsActive() && cellLst[i+1][j].getCellColor() == 0)
+						cellLst[i+1][j].setCellColor(color, true);
+					if(checkBounds(i, j+1) && tmpCell.getRightWall().getIsActive() && cellLst[i][j+1].getCellColor() == 0)
+						cellLst[i][j+1].setCellColor(color, true);
+					if(checkBounds(i, j-1) && tmpCell.getLeftWall().getIsActive() && cellLst[i][j-1].getCellColor() == 0)
+						cellLst[i][j-1].setCellColor(color, true);
+				}
+			}
+		}
+	}
+	
+	/*
+	 * To draw Lines between cells with different colors
+	 */
+	private static void drawLineColorSep(){
+		int i, j, color;
+		Cell tmpCell;
+		for( i = 0; i < rowSize; ++i){
+			for( j = 0; j < colSize; ++j ){
+				tmpCell = cellLst[i][j];
+				color = tmpCell.getCellColor();
+				if( color != 0){
+					if(checkBounds(i-1, j) && cellLst[i-1][j].getCellColor() != 0 && cellLst[i-1][j].getCellColor() != color && !tmpCell.getTopWall().getIsActive())
+						tmpCell.getTopWall().setFixed(true, true);
+					if(checkBounds(i+1, j) && cellLst[i+1][j].getCellColor() != 0 && cellLst[i+1][j].getCellColor() != color && !tmpCell.getBottomWall().getIsActive())
+						tmpCell.getBottomWall().setFixed(true, true);
+					if(checkBounds(i, j-1) && cellLst[i][j-1].getCellColor() != 0 && cellLst[i][j-1].getCellColor() != color && !tmpCell.getLeftWall().getIsActive())
+						tmpCell.getLeftWall().setFixed(true, true);
+					if(checkBounds(i, j+1) && cellLst[i][j+1].getCellColor() != 0 && cellLst[i][j+1].getCellColor() != color && !tmpCell.getRightWall().getIsActive())
+						tmpCell.getRightWall().setFixed(true, true);
+				}
+			}
+		}
+	}
+	
+	/*
+	 * Coloring the '0' cells present in the border along with its neighbors, with color '1' 
+	 */
+	private static void colorZeroCells(){
+		int i;
 		for( i = 0; i < colSize; ++i){
 			if(cellLst[0][i].getNodeVal() == 0 && !cellLst[0][i].getIsColored()){
 				cellLst[0][i].setCellColor(1, true);
@@ -405,71 +487,219 @@ public class MainSolver {
 					cellLst[i+1][colSize-1].setCellColor(1);
 			}
 		}
-	}
-	
-	/*
-	 * Changing the color every time a line is crossed 
-	 */
-	public static void colorLineSep(){
-		int i, j, color;
-		Cell tmpCell;
-		for( i = 0; i < rowSize; ++i){
-			for( j = 0; j < colSize; ++j){
-				tmpCell = cellLst[i][j];
-				if(tmpCell.getCellColor() != 0){
-					color = tmpCell.getCellColor() != 1 ? 1 : 2;
-					if(checkBounds(i-1, j) && tmpCell.getTopWall().getIsActive() && cellLst[i-1][j].getCellColor() == 0)
-						cellLst[i-1][j].setCellColor(color, true);
-					if(checkBounds(i+1, j) && tmpCell.getBottomWall().getIsActive() && cellLst[i+1][j].getCellColor() == 0)
-						cellLst[i+1][j].setCellColor(color, true);
-					if(checkBounds(i, j+1) && tmpCell.getRightWall().getIsActive() && cellLst[i][j+1].getCellColor() == 0)
-						cellLst[i][j+1].setCellColor(color, true);
-					if(checkBounds(i, j-1) && tmpCell.getLeftWall().getIsActive() && cellLst[i][j-1].getCellColor() == 0)
-						cellLst[i][j-1].setCellColor(color, true);
-				}
-			}
-		}
-	}
-	
-	/*
-	 * To draw Lines between cells with different colors
-	 */
-	public static void drawLineColorSep(){
-		int i, j, color;
-		Cell tmpCell;
-		for( i = 0; i < rowSize; ++i){
-			for( j = 0; j < colSize; ++j ){
-				tmpCell = cellLst[i][j];
-				color = tmpCell.getCellColor();
-				if( color != 0){
-					if(checkBounds(i-1, j) && cellLst[i-1][j].getCellColor() != 0 && cellLst[i-1][j].getCellColor() != color && !tmpCell.getTopWall().getIsActive())
-						tmpCell.getTopWall().setFixed(true, true);
-					if(checkBounds(i+1, j) && cellLst[i+1][j].getCellColor() != 0 && cellLst[i+1][j].getCellColor() != color && !tmpCell.getBottomWall().getIsActive())
-						tmpCell.getBottomWall().setFixed(true, true);
-					if(checkBounds(i, j-1) && cellLst[i][j-1].getCellColor() != 0 && cellLst[i][j-1].getCellColor() != color && !tmpCell.getLeftWall().getIsActive())
-						tmpCell.getLeftWall().setFixed(true, true);
-					if(checkBounds(i, j+1) && cellLst[i][j+1].getCellColor() != 0 && cellLst[i][j+1].getCellColor() != color && !tmpCell.getRightWall().getIsActive())
-						tmpCell.getRightWall().setFixed(true, true);
-				}
-			}
-		}
+		colorLineSep();
+		drawLineColorSep();
+		colorBorderLines();
 	}
 	
 	/*
 	 * check for '2' cell with 2 adjacent cells having same/different colors
 	 */
-	public static void colorTwoAdj(){
-		int i, j, color, count;
+	private static void colorTwoAdj(){
+		int i, j, color;
+		Cell tmpCell;
+		for( i = 0; i < rowSize; ++i){
+			for( j = 0; j < colSize; ++j){
+				List<Cell> notColored = new ArrayList<Cell>();
+				List<Cell> diffcolor = new ArrayList<Cell>();
+				List<Cell> samecolor = new ArrayList<Cell>();
+				tmpCell = cellLst[i][j];
+				color = tmpCell.getCellColor();
+				if(tmpCell.getNodeVal() == 2 && color != 0){
+					twoSubFunction(i-1, j, diffcolor, samecolor, notColored, tmpCell, color);
+					twoSubFunction(i+1, j, diffcolor, samecolor, notColored, tmpCell, color);
+					twoSubFunction(i, j-1, diffcolor, samecolor, notColored, tmpCell, color);
+					twoSubFunction(i, j+1, diffcolor, samecolor, notColored, tmpCell, color);
+					if(samecolor.size() >= 2)
+						for( Cell k : notColored)
+							k.setCellColor(color == 1 ? 2 : 1);
+					else if(diffcolor.size() >= 2)
+						for( Cell k : notColored)
+							k.setCellColor(color);
+				}
+			}
+		}
+		colorLineSep();
+		drawLineColorSep();
+		colorBorderLines();
+	}
+	
+	private static void twoSubFunction(int i, int j, List<Cell> diffcolor, List<Cell> samecolor, List<Cell> notColored, Cell tmpCell, int color){
+		if( !checkBounds(i, j)){
+			if(tmpCell.getLeftWall().getIsActive())
+				diffcolor.add(outerCell);
+			else
+				samecolor.add(outerCell);
+		}
+		else if(cellLst[i][j].getCellColor() != color && cellLst[i][j].getCellColor() != 0)
+			diffcolor.add(cellLst[i][j]);
+		else if(cellLst[i][j].getCellColor() != 0)
+			samecolor.add(cellLst[i][j]);
+		else
+			notColored.add(cellLst[i][j]);
+	}
+	
+	private static void colorOneAdj(){
+		int i, j, color;
 		Cell tmpCell;
 		for( i = 0; i < rowSize; ++i){
 			for( j = 0; j < colSize; ++j){
 				tmpCell = cellLst[i][j];
 				color = tmpCell.getCellColor();
-				if(tmpCell.getNodeVal() == 2 && color != 0){
-					
+				if(tmpCell.getNodeVal() == 1){
+					List<Cell> Color1 = new ArrayList<Cell>();
+					List<Cell> Color2 = new ArrayList<Cell>();
+					List<Cell> notColored = new ArrayList<Cell>();
+					oneAndThreeSubFunction(i+1, j, Color1, Color2, notColored, tmpCell);
+					oneAndThreeSubFunction(i-1, j, Color1, Color2, notColored, tmpCell);
+					oneAndThreeSubFunction(i, j-1, Color1, Color2, notColored, tmpCell);
+					oneAndThreeSubFunction(i, j+1, Color1, Color2, notColored, tmpCell);
+					if(color == 0 ){
+						if(Color1.size() >= 2)
+							tmpCell.setCellColor(1);
+						else if(Color2.size() >= 2)
+							tmpCell.setCellColor(2);						
+					}				
+					if(color == 1){
+						if(Color2.size() > 0){
+							for( Cell k : notColored)
+								k.setCellColor(1, true);
+						}
+					}
+					if(color == 2){
+						if(Color1.size() > 0){
+							for( Cell k : notColored)
+								k.setCellColor(2, true);
+						}
+					}
 				}
 			}
 		}
-		
+		colorLineSep();
+		drawLineColorSep();
+		colorBorderLines();
 	}
+	
+	private static void colorThreeAdj(){
+		int i, j, color;
+		Cell tmpCell;
+		for( i = 0; i < rowSize; ++i){
+			for( j = 0; j < colSize; ++j){
+				tmpCell = cellLst[i][j];
+				color = tmpCell.getCellColor();
+				if(tmpCell.getNodeVal() == 3){
+					List<Cell> Color1 = new ArrayList<Cell>();
+					List<Cell> Color2 = new ArrayList<Cell>();
+					List<Cell> notColored = new ArrayList<Cell>();
+					oneAndThreeSubFunction(i+1, j, Color1, Color2, notColored, tmpCell);
+					oneAndThreeSubFunction(i-1, j, Color1, Color2, notColored, tmpCell);
+					oneAndThreeSubFunction(i, j-1, Color1, Color2, notColored, tmpCell);
+					oneAndThreeSubFunction(i, j+1, Color1, Color2, notColored, tmpCell);
+					if(color == 0 ){
+						if(Color1.size() > 1)
+							tmpCell.setCellColor(2);
+						else if(Color2.size() > 1)
+							tmpCell.setCellColor(2);
+					}				
+					if(color == 1){
+						if(Color1.size() > 0){
+							for( Cell k : notColored)
+								k.setCellColor(2, true);
+						}
+					}
+					if(color == 2){
+						if(Color2.size() > 0){
+							for( Cell k : notColored)
+								k.setCellColor(1, true);
+						}
+					}
+				}
+			}
+		}
+		colorLineSep();
+		drawLineColorSep();
+		colorBorderLines();
+	}
+	
+	private static void oneAndThreeSubFunction(int i, int j, List<Cell> Color1, List<Cell> Color2, List<Cell> notColored, Cell tmpCell){
+		if(!checkBounds(i, j))
+			Color1.add(outerCell);
+		else if(cellLst[i][j].getCellColor() == 1)
+			Color1.add(cellLst[i][j]);
+		else if(cellLst[i][j].getCellColor() == 2)
+			Color2.add(cellLst[i][j]);
+		else
+			notColored.add(cellLst[i][j]);
+
+	}
+	
+	private static void cellAroundCorner(){
+		int i, j, color;
+		Cell tmpCell;
+		for( i = 0; i < rowSize; ++i){
+			for( j = 0; j < colSize; ++j){
+				tmpCell = cellLst[i][j];
+				color = tmpCell.getCellColor();
+				if(checkBounds(i+1, j+1) && tmpCell.getRightWall().getIsActive() && tmpCell.getBottomWall().getIsActive())
+					cellAroundCornerSubFunction(i+1, j+1, tmpCell, color);
+				if(checkBounds(i+1, j-1) && tmpCell.getLeftWall().getIsActive() && tmpCell.getBottomWall().getIsActive())
+					cellAroundCornerSubFunction(i+1, j-1, tmpCell, color);
+				if(checkBounds(i-1, j+1) && tmpCell.getRightWall().getIsActive() && tmpCell.getTopWall().getIsActive())
+					cellAroundCornerSubFunction(i-1, j+1, tmpCell, color);
+				if(checkBounds(i-1, j-1) && tmpCell.getLeftWall().getIsActive() && tmpCell.getTopWall().getIsActive())
+					cellAroundCornerSubFunction(i-1, j-1, tmpCell, color);
+			}
+		}
+		colorLineSep();
+		drawLineColorSep();
+		colorBorderLines();
+	}
+	
+	private static void cellAroundCornerSubFunction(int i, int j, Cell tmpCell, int color){
+		if(color != 0){
+			if(cellLst[i][j].getCellColor() == 0)
+				cellLst[i][j].setCellColor(color == 1 ? 2 : 1, true);
+		}
+		else{
+			if(cellLst[i][j].getCellColor() != 0)
+				tmpCell.setCellColor(cellLst[i][j].getCellColor() == 1 ? 2 : 1, true);
+		}
+	}
+	
+	private static void oneCellNotColored(){
+		int i, j, color;
+		Cell tmpCell;
+		
+		for( i = 0; i < rowSize; ++i){
+			for( j = 0; j < colSize; ++j){
+				tmpCell = cellLst[i][j];
+				color = tmpCell.getCellColor();
+				if(tmpCell.getNodeVal() == 1){
+					List<Cell> Color1 = new ArrayList<Cell>();
+					List<Cell> Color2 = new ArrayList<Cell>();
+					List<Cell> notColored = new ArrayList<Cell>();
+					oneAndThreeSubFunction(i+1, j, Color1, Color2, notColored, tmpCell);
+					oneAndThreeSubFunction(i-1, j, Color1, Color2, notColored, tmpCell);
+					oneAndThreeSubFunction(i, j-1, Color1, Color2, notColored, tmpCell);
+					oneAndThreeSubFunction(i, j+1, Color1, Color2, notColored, tmpCell);
+					if(color == 0 && Color1.size() < 2 && Color2.size() < 2){
+						if(checkBounds(i-1, j) && tmpCell.getTopWall().getIsActive() && cellLst[i-1][j].getCellColor() == 0)
+							tmpCell.setCellColor(Color1.size()==0 ? 2 : 1, true);
+						else if(checkBounds(i+1,j) && tmpCell.getBottomWall().getIsActive() && cellLst[i+1][j].getCellColor() == 0)
+							tmpCell.setCellColor(Color1.size()==0 ? 2 : 1, true);
+						else if(checkBounds(i,j+1) && tmpCell.getRightWall().getIsActive() && cellLst[i][j+1].getCellColor() == 0)
+							tmpCell.setCellColor(Color1.size()==0 ? 2 : 1, true);
+						else if(checkBounds(i,j-1) && tmpCell.getLeftWall().getIsActive() && cellLst[i][j-1].getCellColor() == 0)
+							tmpCell.setCellColor(Color1.size()==0 ? 2 : 1, true);						
+					}
+				}
+			}
+		}
+		colorOneAdj();
+		colorOneAdj();
+		colorThreeAdj();
+		cellAroundCorner();
+		colorTwoAdj();
+	}
+	
 }
