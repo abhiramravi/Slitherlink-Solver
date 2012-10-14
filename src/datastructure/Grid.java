@@ -1,5 +1,7 @@
 package datastructure;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Vector;
 public class Grid {
 	
@@ -7,7 +9,8 @@ public class Grid {
 	private static int noColumns;
 	private static boolean isSolved;
 	public static Cell[][] cellLst;
-	public static Vector<Wall> wallLst = getAllWalls();
+	public static Vector<Wall> wallLst;
+	public static DisjointSet ds;
 
 	/*
 	 * Setter Methods
@@ -70,5 +73,16 @@ public class Grid {
 			for( j = 0; j < noColumns; ++j)
 				cellLst[i][j] = new Cell(inpCellVal[i][j], new Coordinate(i, j));
 		isSolved = false;
+	}
+	
+	public static ArrayList<Cell> getUncoloredCells(){
+		int i, j;
+		ArrayList<Cell> uncolLst = new ArrayList<Cell>();
+		for( i = 0; i < noRows; ++i)
+			for( j = 0; j < noColumns; ++j)
+				if(cellLst[i][j].getCellColor() == 0)
+					uncolLst.add(cellLst[i][j]);
+		Collections.sort(uncolLst);
+		return uncolLst;
 	}
 }

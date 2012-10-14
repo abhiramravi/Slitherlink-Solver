@@ -1,6 +1,11 @@
 package datastructure;
 
-public class Cell {
+import java.util.ArrayList;
+import java.util.List;
+
+import backend.MainSolver;
+
+public class Cell implements Comparable<Cell>{
 	private Wall topWall, bottomWall, rightWall, leftWall;
 	private int nodeVal;
 	private Coordinate position;		//Left Top Co-ordinates
@@ -30,6 +35,7 @@ public class Cell {
 		this.setNodeVal(val);
 		this.setCellColor(0);
 		this.setIsColored(false);
+		this.setPosition(new Coordinate(0, -2));
 	}
 	
 	/*
@@ -91,4 +97,26 @@ public class Cell {
 		this.cellColor = color;
 		this.isColored = b;
 	}
+
+	@Override
+	public int compareTo(Cell o) {
+		// TODO Auto-generated method stub
+		return (this.noAdjColored() > o.noAdjColored()) ? 1 : -1;
+	}
+	
+	private int noAdjColored(){
+		int count = 0;
+		int i = this.getPosition().getX();
+		int j = this.getPosition().getY();
+		if(!MainSolver.checkBounds(i+1, j) || Grid.cellLst[i+1][j].getCellColor() != 0)
+			++count;
+		if(!MainSolver.checkBounds(i-1, j) || Grid.cellLst[i-1][j].getCellColor() != 0)
+			++count;
+		if(!MainSolver.checkBounds(i, j+1) || Grid.cellLst[i][j+1].getCellColor() != 0)
+			++count;
+		if(!MainSolver.checkBounds(i, j-1) || Grid.cellLst[i][j-1].getCellColor() != 0)
+			++count;
+		return count;
+	}
+	
 }

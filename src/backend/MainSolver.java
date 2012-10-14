@@ -4,18 +4,26 @@ import java.util.ArrayList;
 import java.util.List;
 
 import datastructure.Cell;
+import datastructure.DisjointSet;
 import datastructure.Grid;
 
 public class MainSolver {
 	private static int rowSize = Grid.getRows(), colSize = Grid.getColumns();
 	private static Cell[][] cellLst = Grid.cellLst;
 	private static Cell outerCell = new Cell(-1);
+	private static DisjointSet ds;
 	
-	private static boolean checkBounds(int x, int y){
+	public static boolean checkBounds(int x, int y){
 		return ( x < 0 || y < 0 || x >= rowSize || y >= colSize) ? false :  true;
 	}
 	
+	public static int getIndex(int x, int y){
+		return (x*rowSize) + y + 2;
+	}
+	
 	public static void basicSolver(){
+		Grid.ds = new DisjointSet(rowSize*colSize);
+		ds = Grid.ds;
 		outerCell.setCellColor(1, true);
 		Cell tmpCell;
 		int i, j;
@@ -32,6 +40,22 @@ public class MainSolver {
 					cellLst[i][j].getRightWall().setFixed(true, false);
 					cellLst[i][j].getBottomWall().setFixed(true, false);
 					cellLst[i][j].getTopWall().setFixed(true, false);
+					if(checkBounds(i+1, j))
+						ds.union( getIndex(i, j), getIndex(i+1, j));
+					else
+						ds.union( 0, getIndex(i, j));
+					if(checkBounds(i-1, j))
+						ds.union( getIndex(i, j), getIndex(i-1, j));
+					else
+						ds.union( 0, getIndex(i, j));
+					if(checkBounds(i, j+1))
+						ds.union( getIndex(i, j), getIndex(i, j+1));
+					else
+						ds.union( 0, getIndex(i, j));
+					if(checkBounds(i, j-1))
+						ds.union( getIndex(i, j), getIndex(i, j-1));
+					else
+						ds.union( 0, getIndex(i, j));
 				}
 			}
 		}
@@ -46,8 +70,9 @@ public class MainSolver {
 				if(cellLst[i][j].getNodeVal() == 0){
 					if(checkBounds(i+1,j) && cellLst[i+1][j].getNodeVal() == 3){
 						tmpCell = cellLst[i+1][j];
+						ds.union(getIndex(i, j), getIndex(i+1, j));
 						if(!tmpCell.getBottomWall().getFixed())
-							tmpCell.getBottomWall().setFixed(true, true); 
+							tmpCell.getBottomWall().setFixed(true, true);
 						if(!tmpCell.getLeftWall().getFixed())
 							tmpCell.getLeftWall().setFixed(true, true);
 						if(!tmpCell.getRightWall().getFixed())
@@ -55,10 +80,11 @@ public class MainSolver {
 						if(checkBounds(i, j-1) && !cellLst[i][j-1].getBottomWall().getFixed())
 							cellLst[i][j-1].getBottomWall().setFixed(true, true);
 						if(checkBounds(i, j+1) && !cellLst[i][j+1].getBottomWall().getFixed())
-							cellLst[i][j+1].getBottomWall().setFixed(true, true);
+							cellLst[i][j+1].getBottomWall().setFixed(true, true);						
 					}
 					if(checkBounds(i-1, j) && cellLst[i-1][j].getNodeVal() == 3){
 						tmpCell = cellLst[i-1][j];
+						ds.union(getIndex(i, j), getIndex(i-1, j));
 						if(!tmpCell.getTopWall().getFixed())
 							tmpCell.getTopWall().setFixed(true, true);
 						if(!tmpCell.getLeftWall().getFixed())
@@ -72,6 +98,7 @@ public class MainSolver {
 					}
 					if(checkBounds(i, j-1) && cellLst[i][j-1].getNodeVal() == 3){
 						tmpCell = cellLst[i][j-1];
+						ds.union(getIndex(i, j), getIndex(i, j-1));
 						if(!tmpCell.getTopWall().getFixed())
 							tmpCell.getTopWall().setFixed(true, true);
 						if(!tmpCell.getLeftWall().getFixed())
@@ -85,6 +112,7 @@ public class MainSolver {
 					}
 					if(checkBounds(i, j+1) && cellLst[i][j+1].getNodeVal() == 3){
 						tmpCell = cellLst[i][j+1];
+						ds.union(getIndex(i, j), getIndex(i, j+1));
 						if(!tmpCell.getTopWall().getFixed())
 							tmpCell.getTopWall().setFixed(true, true);
 						if(!tmpCell.getRightWall().getFixed())
@@ -251,14 +279,21 @@ public class MainSolver {
 		colorZeroCells();
 		int n = 1000;
 		while(n > 0){
+			//if( ds.findSet(getIndex(4, 0)) == 8)
+				//break;
 			colorOneAdj();			
 			colorTwoAdj();
 			colorThreeAdj();
+			colorZeroAdj();
 			cellAroundCorner();
 			oneCellNotColored();
 			--n;
 		}
 		
+		ArrayList<Cell> unColored =  Grid.getUncoloredCells();
+		for( i = 0; i < rowSize; ++i, System.out.println())
+			for(  j = 0; j < colSize; ++j)
+				System.out.print(ds.findSet(getIndex(i, j)) + " ");		
 	}
 	
 	/*
@@ -270,6 +305,7 @@ public class MainSolver {
 		int y = tmpCell.getPosition().getY();
 		switch(tmpCell.getNodeVal()){
 			case 1:{
+				ds.union(0, getIndex(x, y));
 				if(x == 0 && y == 0){
 					if(!tmpCell.getTopWall().getFixed())
 						tmpCell.getTopWall().setFixed(true, false);
@@ -297,6 +333,7 @@ public class MainSolver {
 			}
 			break;
 			case 3:{
+				ds.union(1, getIndex(x, y));
 				if(x == 0 && y == 0){
 					if(!tmpCell.getTopWall().getFixed())
 						tmpCell.getTopWall().setFixed(true, true);
@@ -356,21 +393,29 @@ public class MainSolver {
 	
 	/*
 	 * Works!
-	 * Coloring Cells if the is a border Wall is set Alive, with color '2'
+	 * Coloring Cells if the border Wall is set Alive, with color '2'
 	 */
 	private static void colorBorderCells(){
 		int i;
 		for( i = 0 ; i < colSize; ++i){
-			if(cellLst[0][i].getTopWall().getIsActive() && cellLst[0][i].getCellColor() == 0)
+			if(cellLst[0][i].getTopWall().getIsActive() && cellLst[0][i].getCellColor() == 0){
 				cellLst[0][i].setCellColor(2, true);
-			if(cellLst[rowSize-1][i].getBottomWall().getIsActive() && cellLst[rowSize-1][i].getCellColor() == 0)
+				ds.union(1, getIndex(0, i));
+			}
+			if(cellLst[rowSize-1][i].getBottomWall().getIsActive() && cellLst[rowSize-1][i].getCellColor() == 0){
 				cellLst[rowSize-1][i].setCellColor(2, true);
+				ds.union(1, getIndex(rowSize-1, i));
+			}
 		}
 		for( i = 0; i < rowSize; ++i){
-			if(cellLst[i][0].getLeftWall().getIsActive() && cellLst[i][0].getCellColor() == 0)
+			if(cellLst[i][0].getLeftWall().getIsActive() && cellLst[i][0].getCellColor() == 0){
 				cellLst[i][0].setCellColor(2, true);
-			if(cellLst[i][colSize-1].getRightWall().getIsActive() && cellLst[i][colSize-1].getCellColor() == 0)
+				ds.union(1, getIndex(i, 0));
+			}
+			if(cellLst[i][colSize-1].getRightWall().getIsActive() && cellLst[i][colSize-1].getCellColor() == 0){
 				cellLst[i][colSize-1].setCellColor(2, true);
+				ds.union(1, getIndex(i, colSize-1));
+			}
 		}
 	}
 	
@@ -382,16 +427,24 @@ public class MainSolver {
 	private static void colorBorderLines(){
 		int i;
 		for( i = 0 ; i < colSize; ++i){
-			if(cellLst[0][i].getCellColor() > 1 && !cellLst[0][i].getTopWall().getIsActive())
+			if(cellLst[0][i].getCellColor() > 1 && !cellLst[0][i].getTopWall().getIsActive()){
 				cellLst[0][i].getTopWall().setFixed(true, true);
-			if(cellLst[rowSize-1][i].getCellColor() > 1 && !cellLst[rowSize-1][i].getBottomWall().getIsActive())
+				ds.union(1, getIndex(0, i));
+			}
+			if(cellLst[rowSize-1][i].getCellColor() > 1 && !cellLst[rowSize-1][i].getBottomWall().getIsActive()){
 				cellLst[rowSize-1][i].getBottomWall().setFixed(true, true);
+				ds.union(1, getIndex(rowSize-1, i));
+			}
 		}
 		for( i = 0; i < rowSize; ++i){
-			if(cellLst[i][0].getCellColor() > 1 && !cellLst[i][0].getLeftWall().getIsActive() )
+			if(cellLst[i][0].getCellColor() > 1 && !cellLst[i][0].getLeftWall().getIsActive() ){
 				cellLst[i][0].getLeftWall().setFixed(true, true);
-			if(cellLst[i][colSize-1].getCellColor() > 1 && !cellLst[i][colSize-1].getRightWall().getIsActive())
+				ds.union(1, getIndex(i, 0));
+			}
+			if(cellLst[i][colSize-1].getCellColor() > 1 && !cellLst[i][colSize-1].getRightWall().getIsActive()){
 				cellLst[i][colSize-1].getRightWall().setFixed(true, true);
+				ds.union(1, getIndex(i, colSize-1));
+			}
 		}
 	}
 	/*
@@ -453,66 +506,38 @@ public class MainSolver {
 		for( i = 0; i < colSize; ++i){
 			if(cellLst[0][i].getNodeVal() == 0 && cellLst[0][i].getCellColor() == 0){
 				cellLst[0][i].setCellColor(1, true);
-				if(cellLst[1][i].getCellColor() == 0){
-					cellLst[1][i].setCellColor(1, true);
-					cellLst[0][i].getBottomWall().setFixed(true, false);
-				}
-				if(checkBounds(0, i+1) && cellLst[0][i+1].getCellColor() == 0){
+				cellLst[1][i].setCellColor(1, true);
+				if(checkBounds(0, i+1) && cellLst[0][i+1].getCellColor() == 0)
 					cellLst[0][i+1].setCellColor(1, true);
-					cellLst[0][i].getRightWall().setFixed(true, false);
-				}
-				if(checkBounds(0, i-1) && cellLst[0][i-1].getCellColor() == 0){
+				if(checkBounds(0, i-1) && cellLst[0][i-1].getCellColor() == 0)
 					cellLst[0][i-1].setCellColor(1, true);
-					cellLst[0][i].getLeftWall().setFixed(true, false);
-				}
 			}
 			if(cellLst[rowSize-1][i].getNodeVal() == 0 && cellLst[rowSize-1][i].getCellColor() == 0){
 				cellLst[rowSize-1][i].setCellColor(1, true);
-				if(cellLst[rowSize-2][i].getCellColor() == 0){
-					cellLst[rowSize-2][i].setCellColor(1, true);
-					cellLst[rowSize-1][i].getTopWall().setFixed(true, false);
-				}
-				if(checkBounds(rowSize-1, i-1) && cellLst[rowSize-1][i-1].getCellColor() == 0){
+				cellLst[rowSize-2][i].setCellColor(1, true);
+				if(checkBounds(rowSize-1, i-1) && cellLst[rowSize-1][i-1].getCellColor() == 0)
 					cellLst[rowSize-1][i-1].setCellColor(1, true);
-					cellLst[rowSize-1][i].getLeftWall().setFixed(true, false);
-				}
-				if(checkBounds(rowSize-1, i+1) && cellLst[rowSize-1][i+1].getCellColor() == 0){
+				if(checkBounds(rowSize-1, i+1) && cellLst[rowSize-1][i+1].getCellColor() == 0)
 					cellLst[rowSize-1][i+1].setCellColor(1, true);
-					cellLst[rowSize-1][i].getRightWall().setFixed(true, false);
-				}
 			}
 		}
 		
 		for( i = 1; i < rowSize-1; ++i){
 			if(cellLst[i][0].getNodeVal() == 0 && cellLst[i][0].getCellColor() == 0){
 				cellLst[i][0].setCellColor(1, true);
-				if(cellLst[i][1].getCellColor() == 0){
-					cellLst[i][1].setCellColor(1, true);
-					cellLst[i][0].getRightWall().setFixed(true, false);
-				}
-				if(checkBounds(i+1, 0) && cellLst[i+1][0].getCellColor() == 0){
+				cellLst[i][1].setCellColor(1, true);
+				if(checkBounds(i+1, 0) && cellLst[i+1][0].getCellColor() == 0)
 					cellLst[i+1][0].setCellColor(1);
-					cellLst[i][0].getBottomWall().setFixed(true, false);
-				}
-				if(checkBounds(i-1, 0) && cellLst[i-1][0].getCellColor() == 0){
+				if(checkBounds(i-1, 0) && cellLst[i-1][0].getCellColor() == 0)
 					cellLst[i-1][0].setCellColor(1);
-					cellLst[i][0].getTopWall().setFixed(true, false);
-				}
 			}
 			if(cellLst[i][colSize-1].getNodeVal() == 0 && cellLst[i][colSize-1].getCellColor() == 0){
 				cellLst[i][colSize-1].setCellColor(1, true);
-				if(cellLst[i][colSize-2].getCellColor() == 0){
-					cellLst[i][colSize-2].setCellColor(1, true);
-					cellLst[i][colSize-1].getLeftWall().setFixed(true, false);
-				}
-				if(checkBounds(i-1, colSize-1) && cellLst[i-1][colSize-1].getCellColor() == 0){
+				cellLst[i][colSize-2].setCellColor(1, true);
+				if(checkBounds(i-1, colSize-1) && cellLst[i-1][colSize-1].getCellColor() == 0)
 					cellLst[i-1][colSize-1].setCellColor(1);
-					cellLst[i][colSize-1].getTopWall().setFixed(true, false);
-				}
-				if(checkBounds(i+1, colSize-1) && cellLst[i+1][colSize-1].getCellColor() == 0){
+				if(checkBounds(i+1, colSize-1) && cellLst[i+1][colSize-1].getCellColor() == 0)
 					cellLst[i+1][colSize-1].setCellColor(1);
-					cellLst[i][colSize-1].getBottomWall().setFixed(true, false);
-				}
 			}
 		}
 		colorLineSep();
@@ -525,7 +550,7 @@ public class MainSolver {
 	 * check for '2' cell with 2 adjacent cells having same/different colors
 	 */
 	private static void colorTwoAdj(){
-		int i, j;
+		int i, j, color;
 		Cell tmpCell;
 		for( i = 0; i < rowSize; ++i){
 			for( j = 0; j < colSize; ++j){
@@ -533,11 +558,12 @@ public class MainSolver {
 				List<Cell> Color1 = new ArrayList<Cell>();
 				List<Cell> Color2 = new ArrayList<Cell>();
 				tmpCell = cellLst[i][j];
+				color = tmpCell.getCellColor();
 				if(tmpCell.getNodeVal() == 2){
-					twoSubFunction(i-1, j, Color1, Color2, notColored, tmpCell);
-					twoSubFunction(i+1, j, Color1, Color2, notColored, tmpCell);
-					twoSubFunction(i, j-1, Color1, Color2, notColored, tmpCell);
-					twoSubFunction(i, j+1, Color1, Color2, notColored, tmpCell);
+					oneTwoThreeSubFunction(i-1, j, Color1, Color2, notColored, tmpCell);
+					oneTwoThreeSubFunction(i+1, j, Color1, Color2, notColored, tmpCell);
+					oneTwoThreeSubFunction(i, j-1, Color1, Color2, notColored, tmpCell);
+					oneTwoThreeSubFunction(i, j+1, Color1, Color2, notColored, tmpCell);
 					if(Color1.size() == 2){
 						for( Cell k : notColored)
 							k.setCellColor(2, true);
@@ -546,24 +572,26 @@ public class MainSolver {
 						for( Cell k : notColored)
 							k.setCellColor(1, true);
 					}
+					if(color == 1){
+						for( Cell k : Color1)
+							ds.union(getIndex(i, j), getIndex(k.getPosition().getX(), k.getPosition().getY()));
+						for( Cell k : notColored)
+							if(k.getCellColor() == 1)
+								ds.union(getIndex(i, j), getIndex(k.getPosition().getX(), k.getPosition().getY()));
+					}
+					else if(color == 2){
+						for( Cell k : Color2)
+							ds.union(getIndex(i, j), getIndex(k.getPosition().getX(), k.getPosition().getY()));
+						for( Cell k : notColored)
+							if(k.getCellColor() == 2)
+								ds.union(getIndex(i, j), getIndex(k.getPosition().getX(), k.getPosition().getY()));
+					}
 				}
 			}
 		}
 		colorLineSep();
 		drawLineColorSep();
 		colorBorderLines();
-	}
-	
-	private static void twoSubFunction(int i, int j, List<Cell> Color1, List<Cell> Color2, List<Cell> notColored, Cell tmpCell){
-		if(!checkBounds(i, j))
-			Color1.add(outerCell);
-		else if(cellLst[i][j].getCellColor() == 1)
-			Color1.add(cellLst[i][j]);
-		else if(cellLst[i][j].getCellColor() == 2)
-			Color2.add(cellLst[i][j]);
-		else
-			notColored.add(cellLst[i][j]);
-
 	}
 	
 	/*
@@ -580,10 +608,10 @@ public class MainSolver {
 					List<Cell> Color1 = new ArrayList<Cell>();
 					List<Cell> Color2 = new ArrayList<Cell>();
 					List<Cell> notColored = new ArrayList<Cell>();
-					oneAndThreeSubFunction(i+1, j, Color1, Color2, notColored, tmpCell);
-					oneAndThreeSubFunction(i-1, j, Color1, Color2, notColored, tmpCell);
-					oneAndThreeSubFunction(i, j-1, Color1, Color2, notColored, tmpCell);
-					oneAndThreeSubFunction(i, j+1, Color1, Color2, notColored, tmpCell);
+					oneTwoThreeSubFunction(i+1, j, Color1, Color2, notColored, tmpCell);
+					oneTwoThreeSubFunction(i-1, j, Color1, Color2, notColored, tmpCell);
+					oneTwoThreeSubFunction(i, j-1, Color1, Color2, notColored, tmpCell);
+					oneTwoThreeSubFunction(i, j+1, Color1, Color2, notColored, tmpCell);
 					if(color == 0 ){
 						if(Color1.size() > 1)
 							tmpCell.setCellColor(1);
@@ -596,13 +624,35 @@ public class MainSolver {
 							for( Cell k : notColored)
 								k.setCellColor(1, true);
 						}
+						else if(Color1.size() == 3){
+							for( Cell k : notColored)
+								k.setCellColor(2, true);
+						}
 					}
 					else if(color == 2){
 						if(Color1.size() > 0){
 							for( Cell k : notColored)
 								k.setCellColor(2, true);
 						}
+						else if(Color2.size() == 3){
+							for( Cell k : notColored)
+								k.setCellColor(1, true);
+						}
 					}
+					if(color == 1){
+						for( Cell k : Color1)
+							ds.union(getIndex(i, j), getIndex(k.getPosition().getX(), k.getPosition().getY()));
+						for( Cell k : notColored)
+							if(k.getCellColor() == 1)
+								ds.union(getIndex(i, j), getIndex(k.getPosition().getX(), k.getPosition().getY()));
+					}
+					else if(color == 2){
+						for( Cell k : Color2)
+							ds.union(getIndex(i, j), getIndex(k.getPosition().getX(), k.getPosition().getY()));
+						for( Cell k : notColored)
+							if(k.getCellColor() == 2)
+								ds.union(getIndex(i, j), getIndex(k.getPosition().getX(), k.getPosition().getY()));
+					}					
 				}
 			}
 		}
@@ -625,10 +675,10 @@ public class MainSolver {
 					List<Cell> Color1 = new ArrayList<Cell>();
 					List<Cell> Color2 = new ArrayList<Cell>();
 					List<Cell> notColored = new ArrayList<Cell>();
-					oneAndThreeSubFunction(i+1, j, Color1, Color2, notColored, tmpCell);
-					oneAndThreeSubFunction(i-1, j, Color1, Color2, notColored, tmpCell);
-					oneAndThreeSubFunction(i, j-1, Color1, Color2, notColored, tmpCell);
-					oneAndThreeSubFunction(i, j+1, Color1, Color2, notColored, tmpCell);
+					oneTwoThreeSubFunction(i+1, j, Color1, Color2, notColored, tmpCell);
+					oneTwoThreeSubFunction(i-1, j, Color1, Color2, notColored, tmpCell);
+					oneTwoThreeSubFunction(i, j-1, Color1, Color2, notColored, tmpCell);
+					oneTwoThreeSubFunction(i, j+1, Color1, Color2, notColored, tmpCell);
 					if(color == 0 ){
 						if(Color1.size() > 1)
 							tmpCell.setCellColor(2);
@@ -654,6 +704,20 @@ public class MainSolver {
 							for( Cell k : notColored)
 								k.setCellColor(2, true);
 					}
+					if(color == 1){
+						for( Cell k : Color1)
+							ds.union(getIndex(i, j), getIndex(k.getPosition().getX(), k.getPosition().getY()));
+						for( Cell k : notColored)
+							if(k.getCellColor() == 1)
+								ds.union(getIndex(i, j), getIndex(k.getPosition().getX(), k.getPosition().getY()));
+					}
+					else if(color == 2){
+						for( Cell k : Color2)
+							ds.union(getIndex(i, j), getIndex(k.getPosition().getX(), k.getPosition().getY()));
+						for( Cell k : notColored)
+							if(k.getCellColor() == 2)
+								ds.union(getIndex(i, j), getIndex(k.getPosition().getX(), k.getPosition().getY()));
+					}
 				}
 			}
 		}
@@ -662,7 +726,7 @@ public class MainSolver {
 		colorBorderLines();
 	}
 	
-	private static void oneAndThreeSubFunction(int i, int j, List<Cell> Color1, List<Cell> Color2, List<Cell> notColored, Cell tmpCell){
+	private static void oneTwoThreeSubFunction(int i, int j, List<Cell> Color1, List<Cell> Color2, List<Cell> notColored, Cell tmpCell){
 		if(!checkBounds(i, j))
 			Color1.add(outerCell);
 		else if(cellLst[i][j].getCellColor() == 1)
@@ -721,10 +785,10 @@ public class MainSolver {
 					List<Cell> Color1 = new ArrayList<Cell>();
 					List<Cell> Color2 = new ArrayList<Cell>();
 					List<Cell> notColored = new ArrayList<Cell>();
-					oneAndThreeSubFunction(i+1, j, Color1, Color2, notColored, tmpCell);
-					oneAndThreeSubFunction(i-1, j, Color1, Color2, notColored, tmpCell);
-					oneAndThreeSubFunction(i, j-1, Color1, Color2, notColored, tmpCell);
-					oneAndThreeSubFunction(i, j+1, Color1, Color2, notColored, tmpCell);
+					oneTwoThreeSubFunction(i+1, j, Color1, Color2, notColored, tmpCell);
+					oneTwoThreeSubFunction(i-1, j, Color1, Color2, notColored, tmpCell);
+					oneTwoThreeSubFunction(i, j-1, Color1, Color2, notColored, tmpCell);
+					oneTwoThreeSubFunction(i, j+1, Color1, Color2, notColored, tmpCell);
 					if(color == 0 && Color1.size() < 2 && Color2.size() < 2){
 						if(checkBounds(i-1, j) && tmpCell.getTopWall().getIsActive() && cellLst[i-1][j].getCellColor() == 0)
 							tmpCell.setCellColor(Color1.size()==0 ? 2 : 1, true);
@@ -742,5 +806,49 @@ public class MainSolver {
 		drawLineColorSep();
 		colorBorderLines();
 	}
+	
+	private static void colorZeroAdj(){
+		int i, j, color;
+		Cell tmpCell;
+		for( i = 0; i < rowSize; ++i){
+			for( j = 0; j < colSize; ++j){
+				tmpCell = cellLst[i][j];
+				color = tmpCell.getCellColor();
+				if(tmpCell.getNodeVal() == 0){
+					if(color != 0){
+						zeroSubFunction(i+1, j, color);
+						zeroSubFunction(i-1, j, color);
+						zeroSubFunction(i, j+1, color);
+						zeroSubFunction(i, j-1, color);
+					}
+					else{
+						List<Cell> Color1 = new ArrayList<Cell>();
+						List<Cell> Color2 = new ArrayList<Cell>();
+						List<Cell> notColored = new ArrayList<Cell>();
+						oneTwoThreeSubFunction(i+1, j, Color1, Color2, notColored, tmpCell);
+						oneTwoThreeSubFunction(i-1, j, Color1, Color2, notColored, tmpCell);
+						oneTwoThreeSubFunction(i, j-1, Color1, Color2, notColored, tmpCell);
+						oneTwoThreeSubFunction(i, j+1, Color1, Color2, notColored, tmpCell);
+						if(Color1.size() > 0){
+							tmpCell.setCellColor(1, true);
+							for( Cell k : notColored)
+								k.setCellColor(1, true);
+						}
+						else if( Color2.size() > 0){
+							tmpCell.setCellColor(2, true);
+							for( Cell k : notColored)
+								k.setCellColor(2, true);
+						}
+					}
+				}
+			}
+		}
+	}
+	
+	private static void zeroSubFunction(int i, int j, int color){
+		if(checkBounds(i, j) && cellLst[i][j].getCellColor() == 0)
+			cellLst[i][j].setCellColor(color, true);
+	}
+	
 	
 }
