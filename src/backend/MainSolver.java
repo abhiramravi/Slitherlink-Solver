@@ -850,5 +850,19 @@ public class MainSolver {
 			cellLst[i][j].setCellColor(color, true);
 	}
 	
-	
+	private static void connectAdj(){
+		int i, j, color;
+		Cell tmpCell;
+		for( i = 0; i < rowSize; ++i){
+			for( j = 0; j < colSize; ++j){
+				tmpCell = cellLst[i][j];
+				color = tmpCell.getCellColor();
+				if(color != 0){
+					if(checkBounds(i+1, j) && cellLst[i+1][j].getCellColor() == color){
+						
+					}
+				}
+			}
+		}
+	}
 }
