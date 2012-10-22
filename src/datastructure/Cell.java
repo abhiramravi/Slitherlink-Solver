@@ -1,8 +1,5 @@
 package datastructure;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import backend.MainSolver;
 
 public class Cell implements Comparable<Cell>{
@@ -10,7 +7,6 @@ public class Cell implements Comparable<Cell>{
 	private int nodeVal;
 	private Coordinate position;		//Left Top Co-ordinates
 	private int cellColor;				// 0 - no color ; 1 - outer part ; 2 - inner part
-	//public int noCellOppColor;
 	private boolean isColored;
 	
 	public Cell(int val, Coordinate pos){
@@ -18,7 +14,6 @@ public class Cell implements Comparable<Cell>{
 		this.setPosition(pos);
 		this.setCellColor(0);
 		this.setIsColored(false);
-		//this.noCellOppColor = 0;
 		this.setRightWall(new Wall(new Coordinate(pos.getX(), pos.getY()+1), false));
 		if(pos.getX()!=0)
 			this.setTopWall(Grid.cellLst[pos.getX()-1][pos.getY()].getBottomWall());
@@ -75,16 +70,16 @@ public class Cell implements Comparable<Cell>{
 	private void setPosition(Coordinate pos) {
 		this.position = pos;		
 	}
-	private void setBottomWall(Wall wall) {
+	public void setBottomWall(Wall wall) {
 		this.bottomWall = wall;
 	}
-	private void setLeftWall(Wall wall) {
+	public void setLeftWall(Wall wall) {
 		this.leftWall = wall;
 	}
-	private void setTopWall(Wall wall) {
+	public void setTopWall(Wall wall) {
 		this.topWall = wall;
 	}
-	private void setRightWall(Wall wall) {
+	public void setRightWall(Wall wall) {
 		this.rightWall = wall;
 	}
 	public void setCellColor(int color){
@@ -98,6 +93,19 @@ public class Cell implements Comparable<Cell>{
 		this.isColored = b;
 	}
 
+	public int getActiveWalls(){
+		int count = 0;
+		if(this.leftWall.getIsActive())
+			++count;
+		if(this.rightWall.getIsActive())
+			++count;
+		if(this.topWall.getIsActive())
+			++count;
+		if(this.bottomWall.getIsActive())
+			++count;
+		return count;
+	}
+	
 	@Override
 	public int compareTo(Cell o) {
 		int i = this.noAdjColored();
@@ -122,4 +130,13 @@ public class Cell implements Comparable<Cell>{
 		return count;
 	}
 	
+	public Cell getCopy(){
+		Cell copy = new Cell(this.nodeVal, this.position);
+		copy.setCellColor(this.cellColor, this.isColored);
+		copy.setBottomWall(this.bottomWall.getCopy());
+		copy.setTopWall(this.topWall.getCopy());
+		copy.setRightWall(this.rightWall.getCopy());
+		copy.setLeftWall(this.leftWall.getCopy());
+		return copy;
+	}
 }

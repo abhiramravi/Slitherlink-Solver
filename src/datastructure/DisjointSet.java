@@ -11,18 +11,19 @@ public class DisjointSet {
 	 * parent : Stores the parent or root number 
 	 * root : Stores the rank, that is, the Maximum length of the leaves from this node
 	 */
-	private int[] parent;
-	private int[] rank;
+	public int[] parent;
+	public int[] rank;
+	public int arrSize;
 	
 	/**
 	 * This is the MakeSet function of the disjoint set object
 	 */
 	public DisjointSet(int size) {
-		System.out.println(size);
-		parent = new int[size + 2];
-		rank = new int[size + 2];
-		// 0 - gray cell 2 - orange cell
-		for( int i = 0; i <= size+1; i++){
+		arrSize = size + 2;
+		parent = new int[arrSize];
+		rank = new int[arrSize];
+		// 0 - gray cell 1 - orange cell
+		for( int i = 0; i < arrSize; i++){
 			parent[i] = i;			//Initially every node is its own parent and hence has rank zero
 			rank[i] = 0;
 		}
@@ -44,7 +45,12 @@ public class DisjointSet {
 	 * @param cell1 : The node which has to be united with the 'cell2' node
 	 */
 	public void union( int cell1, int cell2 ){
-		LinkSet( findSet(cell1), findSet(cell2) );
+		int a = findSet(cell1);
+		int b = findSet(cell2);
+		if(a == 0)
+			LinkSet(a, b);
+		else
+			LinkSet(b, a);
 	}
 
 	/**
@@ -53,14 +59,23 @@ public class DisjointSet {
 	 * @param findSet2 : The second node's representative
 	 */
 	private void LinkSet(int findSet1, int findSet2) {
-		if( rank[findSet1] > rank[findSet2] )
-			parent[findSet2] = findSet1;
+		if( rank[findSet2] > rank[findSet1] )
+			parent[findSet1] = findSet2;
 		else
 		{
-			parent[findSet1] = findSet2;
+			parent[findSet2] = findSet1;
 			if( rank[findSet1] == rank[findSet2] )
 				rank[findSet2]++;
 		}
 	}	
+	
+	public DisjointSet getCopy(){
+		DisjointSet copy = new DisjointSet(arrSize);
+		for(int i = 0; i < arrSize; ++i){
+			copy.parent[i] = this.parent[i];
+			copy.rank[i] = this.rank[i];
+		}
+		return copy;
+	}
 	
 }
