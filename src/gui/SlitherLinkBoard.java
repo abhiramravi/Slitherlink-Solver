@@ -144,14 +144,13 @@ public class SlitherLinkBoard extends JFrame
 		Vector<Wall> wList = Grid.getAllWalls();
 		for (Wall w : wList)
 		{
-			/*System.out.println(w.getWallStart().getX() + " "
+			System.out.println(w.getWallStart().getX() + " "
 					+ w.getWallStart().getY() + " " + w.getIsActive()
 					+ " horiz = " + w.getHorzn());
-			*/
 			if (w.getIsActive())
 			{
 				Coordinate c = w.getWallStart();
-//				System.out.println("X = " + c.getX() + "; Y = " + c.getY());
+				System.out.println("X = " + c.getX() + "; Y = " + c.getY());
 				if (w.getHorzn())
 				{
 					if (c.getX() < gridRows)
@@ -221,7 +220,6 @@ public class SlitherLinkBoard extends JFrame
 				}
 				System.out.println();
 			}
-			
 			
 			MainSolver.basicSolver();
 			printWalls();
