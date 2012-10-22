@@ -7,7 +7,7 @@ public class Grid {
 	
 	private static int noRows;
 	private static int noColumns;
-	private static boolean isSolved;
+	public static boolean isSolved;
 	public static Cell[][] cellLst;
 	public static Vector<Wall> wallLst;
 	public static DisjointSet ds;
@@ -21,9 +21,6 @@ public class Grid {
 	public void setColumn(int cols){
 		noColumns = cols;
 	}
-	public void setisSolved(boolean solved){
-		isSolved = solved;
-	}
 	
 	/*
 	 * Getter Methods
@@ -33,9 +30,6 @@ public class Grid {
 	}
 	public static int getColumns(){
 		return noColumns;
-	}
-	public static boolean getisSolvedr(){
-		return isSolved;
 	}
 	
 	/**
@@ -73,17 +67,7 @@ public class Grid {
 		for( i = 0; i < noRows; ++i)
 			for( j = 0; j < noColumns; ++j)
 				cellLst[i][j] = new Cell(inpCellVal[i][j], new Coordinate(i, j));
+		ds = new DisjointSet(noColumns*noRows);
 		isSolved = false;
-	}
-	
-	public static ArrayList<Cell> getUncoloredCells(){
-		int i, j;
-		ArrayList<Cell> uncolLst = new ArrayList<Cell>();
-		for( i = 0; i < noRows; ++i)
-			for( j = 0; j < noColumns; ++j)
-				if(cellLst[i][j].getCellColor() == 0)
-					uncolLst.add(cellLst[i][j]);
-		Collections.sort(uncolLst);
-		return uncolLst;
 	}
 }

@@ -9,8 +9,8 @@ import datastructure.DisjointSet;
 import datastructure.Grid;
 
 public class MainSolver {
-	private static int rowSize = Grid.getRows(), colSize = Grid.getColumns();
-	private static Cell[][] cellLst = Grid.cellLst;
+	private static int rowSize, colSize;
+	private static Cell[][] cellLst;
 	private static Cell outerCell = new Cell(-1);
 	private static DisjointSet ds;
 	private static int level;
@@ -33,10 +33,16 @@ public class MainSolver {
 	}
 	
 	public static void basicSolver(){
-		Grid.ds = new DisjointSet(rowSize*colSize);
+		/* 
+		 * Initialization of the static variables
+		 */
 		ds = Grid.ds;
+		cellLst = Grid.cellLst;
 		outerCell.setCellColor(1, true);
+		rowSize = Grid.getRows();
+		colSize = Grid.getColumns();
 		level = 0;
+		
 		Cell tmpCell;
 		int i, j;
 		
@@ -307,23 +313,35 @@ public class MainSolver {
 				System.out.println(n);
 		}
 		System.out.println("BASE CASE DONE IN " + n + " STEPS");
-		for( i = 0; i < rowSize; ++i, System.out.println())
+		/*
+		 * Degbuggine print statements
+		 */
+		/*for( i = 0; i < rowSize; ++i, System.out.println())
 			for(  j = 0; j < colSize; ++j)
 				System.out.print(ds.findSet(getIndex(i, j)) + " ");
+		 */
 		System.out.println("Calling BackTrack");
 		if(backTrack()){
 			System.out.println("Solution Found");
 			System.out.println("BACK TRACK DONE AFTER VISITING LEAVES "+ level + " TIMES");
+			Grid.isSolved = true;
+			Grid.cellLst = getCellLstCopy(cellLst);
 		}
-		else
+		else{
 			System.out.println("Something is wrong");
-		Grid.cellLst = getCellLstCopy(cellLst);
-		for( i = 0; i < rowSize; ++i, System.out.println())
+			Grid.isSolved = false;
+		}
+		
+		/*
+		 * Debugging print statements
+		 */
+		/*for( i = 0; i < rowSize; ++i, System.out.println())
 			for(  j = 0; j < colSize; ++j)
 				System.out.print(ds.findSet(getIndex(i, j)) + " ");
 		for( i = 0; i < rowSize; ++i, System.out.println())
 			for(  j = 0; j < colSize; ++j)
 				System.out.print(cellLst[i][j].getCellColor() + " ");
+		*/
 		
 	}
 	
