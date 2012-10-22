@@ -32,6 +32,8 @@ import javax.swing.JTextField;
 import javax.swing.KeyStroke;
 import javax.swing.border.Border;
 
+import backend.MainSolver;
+
 import datastructure.Coordinate;
 import datastructure.Grid;
 import datastructure.Wall;
@@ -75,7 +77,7 @@ public class SlitherLinkBoard extends JFrame
 	private Border getActiveBorder(int[] a)
 	{
 		return BorderFactory.createMatteBorder(a[0], a[1], a[2], a[3],
-				Color.MAGENTA);
+				Color.BLACK);
 	}
 
 	/* The Main constructor */
@@ -99,15 +101,15 @@ public class SlitherLinkBoard extends JFrame
 	{
 		for (int i = 0; i < gridRows; i++)
 		{
-			for (int j = 0; j < gridCols; j++)
+			for (int k = 0; k < gridCols; k++)
 			{
-				if (Grid.cellLst[i][j].getCellColor() == 1)
+				if (Grid.cellLst[i][k].getCellColor() == 1)
 				{
-					pnlCells[i][j].setBackground(Color.ORANGE);
+					j[i][k].setBackground(Color.ORANGE);
 				}
-				if (Grid.cellLst[i][j].getCellColor() == 2)
+				if (Grid.cellLst[i][k].getCellColor() == 2)
 				{
-					pnlCells[i][j].setBackground(Color.LIGHT_GRAY);
+					j[i][k].setBackground(Color.YELLOW);
 				}
 			}
 		}
@@ -218,6 +220,10 @@ public class SlitherLinkBoard extends JFrame
 				}
 				System.out.println();
 			}
+			
+			MainSolver.basicSolver();
+			printWalls();
+			colorCells();
 		}
 		
 	}
