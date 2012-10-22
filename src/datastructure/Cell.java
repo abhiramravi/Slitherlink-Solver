@@ -2,7 +2,7 @@ package datastructure;
 
 import backend.MainSolver;
 
-public class Cell implements Comparable<Cell>{
+public class Cell{
 	private Wall topWall, bottomWall, rightWall, leftWall;
 	private int nodeVal;
 	private Coordinate position;		//Left Top Co-ordinates
@@ -106,26 +106,17 @@ public class Cell implements Comparable<Cell>{
 		return count;
 	}
 	
-	@Override
-	public int compareTo(Cell o) {
-		int i = this.noAdjColored();
-		int j = o.noAdjColored();
-		if(i!=j)
-			return i > j ? 1 : -1;
-		return 0;
-	}
-	
-	private int noAdjColored(){
+	public int noAdjColored(Cell[][] cellArr){
 		int count = 0;
 		int i = this.getPosition().getX();
 		int j = this.getPosition().getY();
-		if(!MainSolver.checkBounds(i+1, j) || Grid.cellLst[i+1][j].getCellColor() != 0)
+		if(!MainSolver.checkBounds(i+1, j) || cellArr[i+1][j].getCellColor() != 0)
 			++count;
-		if(!MainSolver.checkBounds(i-1, j) || Grid.cellLst[i-1][j].getCellColor() != 0)
+		if(!MainSolver.checkBounds(i-1, j) || cellArr[i-1][j].getCellColor() != 0)
 			++count;
-		if(!MainSolver.checkBounds(i, j+1) || Grid.cellLst[i][j+1].getCellColor() != 0)
+		if(!MainSolver.checkBounds(i, j+1) || cellArr[i][j+1].getCellColor() != 0)
 			++count;
-		if(!MainSolver.checkBounds(i, j-1) || Grid.cellLst[i][j-1].getCellColor() != 0)
+		if(!MainSolver.checkBounds(i, j-1) || cellArr[i][j-1].getCellColor() != 0)
 			++count;
 		return count;
 	}
