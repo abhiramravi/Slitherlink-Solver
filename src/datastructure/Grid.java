@@ -9,7 +9,6 @@ public class Grid {
 	private static int noColumns;
 	public static boolean isSolved;
 	public static Cell[][] cellLst;
-	public static Vector<Wall> wallLst;
 	public static DisjointSet ds;
 
 	/*
@@ -37,19 +36,22 @@ public class Grid {
 	 * @return : Wall List of the Grid
 	 */
 	public static Vector<Wall> getAllWalls(){
-		wallLst = new Vector<Wall>(2*noRows*noColumns + noColumns + noRows);
+		return getAllWalls(cellLst);
+	}
+	
+	public static Vector<Wall> getAllWalls(Cell[][] cellArr){
+		Vector<Wall> wallLst = new Vector<Wall>(2*noRows*noColumns + noColumns + noRows);
 		int i, j;
 		for( i = 0; i < noRows; ++i)
-			wallLst.add(cellLst[i][0].getLeftWall());
+			wallLst.add(cellArr[i][0].getLeftWall());
 		for( j = 0; j < noColumns; ++j)
-			wallLst.add(cellLst[0][j].getTopWall());
+			wallLst.add(cellArr[0][j].getTopWall());
 		for(  i = 0; i < noRows; ++i){
 			for( j = 0; j < noColumns; ++j){
-				wallLst.add(cellLst[i][j].getBottomWall());
-				wallLst.add(cellLst[i][j].getRightWall());
+				wallLst.add(cellArr[i][j].getBottomWall());
+				wallLst.add(cellArr[i][j].getRightWall());
 			}
 		}
-		
 		return wallLst;
 	}
 	

@@ -2,11 +2,13 @@ package backend;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Vector;
 
 import datastructure.Cell;
 import datastructure.Coordinate;
 import datastructure.DisjointSet;
 import datastructure.Grid;
+import datastructure.Wall;
 
 public class MainSolver {
 	private static int rowSize, colSize;
@@ -14,6 +16,7 @@ public class MainSolver {
 	private static Cell outerCell = new Cell(-1);
 	private static DisjointSet ds;
 	private static int level;
+	private static int[][] posArr;
 	
 	public static boolean checkBounds(int x, int y){
 		return ( x < 0 || y < 0 || x >= rowSize || y >= colSize) ? false :  true;
@@ -41,6 +44,7 @@ public class MainSolver {
 		outerCell.setCellColor(1, true);
 		rowSize = Grid.getRows();
 		colSize = Grid.getColumns();
+		posArr = new int[rowSize+1][colSize+1];
 		level = 0;
 		
 		Cell tmpCell;
@@ -316,11 +320,12 @@ public class MainSolver {
 		/*
 		 * Degbuggine print statements
 		 */
-		/*for( i = 0; i < rowSize; ++i, System.out.println())
+		for( i = 0; i < rowSize; ++i, System.out.println())
 			for(  j = 0; j < colSize; ++j)
 				System.out.print(ds.findSet(getIndex(i, j)) + " ");
-		 */
+		
 		System.out.println("Calling BackTrack");
+		
 		if(backTrack()){
 			System.out.println("Solution Found");
 			System.out.println("BACK TRACK DONE AFTER VISITING LEAVES "+ level + " TIMES");
@@ -335,13 +340,12 @@ public class MainSolver {
 		/*
 		 * Debugging print statements
 		 */
-		/*for( i = 0; i < rowSize; ++i, System.out.println())
+		for( i = 0; i < rowSize; ++i, System.out.println())
 			for(  j = 0; j < colSize; ++j)
 				System.out.print(ds.findSet(getIndex(i, j)) + " ");
 		for( i = 0; i < rowSize; ++i, System.out.println())
 			for(  j = 0; j < colSize; ++j)
 				System.out.print(cellLst[i][j].getCellColor() + " ");
-		*/
 		
 	}
 	
@@ -410,30 +414,29 @@ public class MainSolver {
 			}
 			break;
 			case 2:{
-				Cell[][] tmpCellList = Grid.cellLst;
 				if(x == 0 && y == 0){
-					if(!tmpCellList[1][0].getLeftWall().getFixed())
-						tmpCellList[1][0].getLeftWall().setFixed(true, true);
-					if(!tmpCellList[0][1].getTopWall().getFixed())
-						tmpCellList[0][1].getTopWall().setFixed(true, true);
+					if(!cellLst[1][0].getLeftWall().getFixed())
+						cellLst[1][0].getLeftWall().setFixed(true, true);
+					if(!cellLst[0][1].getTopWall().getFixed())
+						cellLst[0][1].getTopWall().setFixed(true, true);
 				}
 				if(x == rowSize-1 && y == 0){
-					if(!tmpCellList[x-1][0].getLeftWall().getFixed())
-						tmpCell.getLeftWall().setFixed(true, true);
-					if(!tmpCellList[x][1].getBottomWall().getFixed())
-						tmpCellList[x][1].getBottomWall().setFixed(true, true);
+					if(!cellLst[x-1][0].getLeftWall().getFixed())
+						cellLst[x-1][0].getLeftWall().setFixed(true, true);
+					if(!cellLst[x][1].getBottomWall().getFixed())
+						cellLst[x][1].getBottomWall().setFixed(true, true);
 				}
 				if(x == rowSize-1 && y == colSize-1){
-					if(!tmpCellList[x][y-1].getBottomWall().getFixed())
-						tmpCellList[x][y-1].getBottomWall().setFixed(true, true);
-					if(!tmpCellList[x-1][y].getRightWall().getFixed())
-						tmpCellList[x-1][y].getRightWall().setFixed(true, true);
+					if(!cellLst[x][y-1].getBottomWall().getFixed())
+						cellLst[x][y-1].getBottomWall().setFixed(true, true);
+					if(!cellLst[x-1][y].getRightWall().getFixed())
+						cellLst[x-1][y].getRightWall().setFixed(true, true);
 				}
 				if(x == 0 && y == colSize-1){
-					if(!tmpCellList[x][y-1].getTopWall().getFixed())
-						tmpCellList[x][y-1].getTopWall().setFixed(true, true);
-					if(!tmpCellList[x+1][y].getRightWall().getFixed())
-						tmpCellList[x+1][y].getRightWall().setFixed(true, true);
+					if(!cellLst[x][y-1].getTopWall().getFixed())
+						cellLst[x][y-1].getTopWall().setFixed(true, true);
+					if(!cellLst[x+1][y].getRightWall().getFixed())
+						cellLst[x+1][y].getRightWall().setFixed(true, true);
 				}
 			}
 			
@@ -515,7 +518,7 @@ public class MainSolver {
 				tmpCell = cellLst[i][j];
 				if(tmpCell.getCellColor() != 0){
 					color = tmpCell.getCellColor() != 1 ? 1 : 2;
-					if(checkBounds(i-1, j) && tmpCell.getTopWall().getIsActive() && cellLst[i-1][j].getCellColor() == 0){
+					if(checkBounds(i-1, j) && tmpCell.getTopWall().getIsActive() && cellLst[i-1][j].getCellColor() == 0 ){
 						cellLst[i-1][j].setCellColor(color, true);
 						to_ret = true;
 					}
@@ -1177,13 +1180,33 @@ public class MainSolver {
 					return false;
 			}
 		}
+		
+		/*
+		 * For checking whether any point has morethan 2 lines incident
+		 */
+		for( i = 0; i <= rowSize; ++i)
+			for( j = 0; j <= colSize; ++j)
+				posArr[i][j] = 0;
+		
+		Vector<Wall> tmpWallLst = Grid.getAllWalls(cellLst);
+		for( Wall w : tmpWallLst){
+			if(w.getIsActive()){
+				++posArr[w.getWallStart().getX()][w.getWallStart().getY()];
+				++posArr[w.getWallEnd().getX()][w.getWallEnd().getY()];
+			}
+		}
+		
+		for( i = 0; i <= rowSize; ++i)
+			for( j = 0; j <= colSize; ++j)
+				if(posArr[i][j] > 2)
+					return false;
 		return true;
 	}
 	
 	private static boolean isGameOver(){
 		int i, j, insParent = 1, tmp;
 		boolean setFlag = true;
-		for( i = 0; i < rowSize; ++i)
+		for( i = 0; i < rowSize; ++i){
 			for( j = 0; j < colSize; ++j){
 				if(cellLst[i][j].getNodeVal() != -1 && cellLst[i][j].getNodeVal() != cellLst[i][j].getActiveWalls())
 					return false;
@@ -1195,6 +1218,23 @@ public class MainSolver {
 				if(cellLst[i][j].getCellColor() < 1 || (tmp != insParent && tmp != 0))
 					return false;
 			}
+		}
+		for( i = 0; i <= rowSize; ++i)
+			for( j = 0; j <= colSize; ++j)
+				posArr[i][j] = 0;
+		
+		Vector<Wall> tmpWallLst = Grid.getAllWalls(cellLst);
+		for( Wall w : tmpWallLst){
+			if(w.getIsActive()){
+				++posArr[w.getWallStart().getX()][w.getWallStart().getY()];
+				++posArr[w.getWallEnd().getX()][w.getWallEnd().getY()];
+			}
+		}
+		
+		for( i = 0; i <= rowSize; ++i)
+			for( j = 0; j <= colSize; ++j)
+				if(posArr[i][j] > 2)
+					return false;
 		return true;
 	}
 	
