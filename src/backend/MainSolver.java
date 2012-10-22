@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import datastructure.Cell;
+import datastructure.Coordinate;
 import datastructure.DisjointSet;
 import datastructure.Grid;
 
@@ -12,19 +13,30 @@ public class MainSolver {
 	private static Cell[][] cellLst = Grid.cellLst;
 	private static Cell outerCell = new Cell(-1);
 	private static DisjointSet ds;
+	private static int level;
 	
 	public static boolean checkBounds(int x, int y){
 		return ( x < 0 || y < 0 || x >= rowSize || y >= colSize) ? false :  true;
 	}
 	
 	public static int getIndex(int x, int y){
-		return (x*rowSize) + y + 2;
+		return checkBounds(x,y) ? ( x*rowSize + y + 2 ) : 0;
+	}
+	
+	private static Cell[][] getCellLstCopy(Cell[][] cellArr){
+		int i, j;
+		Cell[][] copy = new Cell[rowSize][colSize];
+		for( i = 0; i < rowSize; ++i)
+			for( j = 0; j < colSize; ++j)
+				copy[i][j] = cellArr[i][j].getCopy();
+		return copy;
 	}
 	
 	public static void basicSolver(){
 		Grid.ds = new DisjointSet(rowSize*colSize);
 		ds = Grid.ds;
 		outerCell.setCellColor(1, true);
+		level = 0;
 		Cell tmpCell;
 		int i, j;
 		
@@ -40,22 +52,10 @@ public class MainSolver {
 					cellLst[i][j].getRightWall().setFixed(true, false);
 					cellLst[i][j].getBottomWall().setFixed(true, false);
 					cellLst[i][j].getTopWall().setFixed(true, false);
-					if(checkBounds(i+1, j))
-						ds.union( getIndex(i, j), getIndex(i+1, j));
-					else
-						ds.union( 0, getIndex(i, j));
-					if(checkBounds(i-1, j))
-						ds.union( getIndex(i, j), getIndex(i-1, j));
-					else
-						ds.union( 0, getIndex(i, j));
-					if(checkBounds(i, j+1))
-						ds.union( getIndex(i, j), getIndex(i, j+1));
-					else
-						ds.union( 0, getIndex(i, j));
-					if(checkBounds(i, j-1))
-						ds.union( getIndex(i, j), getIndex(i, j-1));
-					else
-						ds.union( 0, getIndex(i, j));
+					ds.union( getIndex(i, j), getIndex(i+1, j));
+					ds.union( getIndex(i, j), getIndex(i-1, j));
+					ds.union( getIndex(i, j), getIndex(i, j+1));
+					ds.union( getIndex(i, j), getIndex(i, j-1));
 				}
 			}
 		}
@@ -277,23 +277,54 @@ public class MainSolver {
 		 */
 		colorBorderCells();
 		colorZeroCells();
-		int n = 1000;
-		while(n > 0){
-			//if( ds.findSet(getIndex(4, 0)) == 8)
-				//break;
-			colorOneAdj();			
-			colorTwoAdj();
-			colorThreeAdj();
-			colorZeroAdj();
-			cellAroundCorner();
-			oneCellNotColored();
-			--n;
+		int n = 0;
+		boolean flag = true, tmpflag;
+		while(flag){
+			flag = false;
+			flag = colorOneAdj();
+			tmpflag = colorTwoAdj();
+			flag = flag ? flag : tmpflag;
+			tmpflag = colorThreeAdj();
+			flag = flag ? flag : tmpflag;
+			tmpflag = colorZeroAdj();
+			flag = flag ? flag : tmpflag;
+			tmpflag = cellAroundCorner();
+			flag = flag ? flag : tmpflag;
+			tmpflag = oneCellNotColored();
+			flag = flag ? flag : tmpflag;
+			tmpflag = connectAdjSets();
+			flag = flag ? flag : tmpflag;
+			if(!CheckBoardStateCorrect()){
+				System.out.println("SOMETHING IS WRONG WITH THE CONSTRUCTION AND BASE CASE " + n);
+				break;
+			}
+			if(isGameOver()){
+				System.out.println("GAME OVRE after " + n + " BASE CASE steps");
+				break;
+			}
+			++n;
+			if(n%500 == 0)
+				System.out.println(n);
 		}
-		
-		ArrayList<Cell> unColored =  Grid.getUncoloredCells();
+		System.out.println("BASE CASE DONE IN " + n + " STEPS");
 		for( i = 0; i < rowSize; ++i, System.out.println())
 			for(  j = 0; j < colSize; ++j)
-				System.out.print(ds.findSet(getIndex(i, j)) + " ");		
+				System.out.print(ds.findSet(getIndex(i, j)) + " ");
+		System.out.println("Calling BackTrack");
+		if(backTrack()){
+			System.out.println("Solution Found");
+			System.out.println("BACK TRACK DONE AFTER VISITING LEAVES "+ level + " TIMES");
+		}
+		else
+			System.out.println("Something is wrong");
+		Grid.cellLst = getCellLstCopy(cellLst);
+		for( i = 0; i < rowSize; ++i, System.out.println())
+			for(  j = 0; j < colSize; ++j)
+				System.out.print(ds.findSet(getIndex(i, j)) + " ");
+		for( i = 0; i < rowSize; ++i, System.out.println())
+			for(  j = 0; j < colSize; ++j)
+				System.out.print(cellLst[i][j].getCellColor() + " ");
+		
 	}
 	
 	/*
@@ -333,7 +364,7 @@ public class MainSolver {
 			}
 			break;
 			case 3:{
-				ds.union(1, getIndex(x, y));
+				//ds.union(1, getIndex(x, y));
 				if(x == 0 && y == 0){
 					if(!tmpCell.getTopWall().getFixed())
 						tmpCell.getTopWall().setFixed(true, true);
@@ -400,21 +431,21 @@ public class MainSolver {
 		for( i = 0 ; i < colSize; ++i){
 			if(cellLst[0][i].getTopWall().getIsActive() && cellLst[0][i].getCellColor() == 0){
 				cellLst[0][i].setCellColor(2, true);
-				ds.union(1, getIndex(0, i));
+				//ds.union(1, getIndex(0, i));
 			}
 			if(cellLst[rowSize-1][i].getBottomWall().getIsActive() && cellLst[rowSize-1][i].getCellColor() == 0){
 				cellLst[rowSize-1][i].setCellColor(2, true);
-				ds.union(1, getIndex(rowSize-1, i));
+				//ds.union(1, getIndex(rowSize-1, i));
 			}
 		}
 		for( i = 0; i < rowSize; ++i){
 			if(cellLst[i][0].getLeftWall().getIsActive() && cellLst[i][0].getCellColor() == 0){
 				cellLst[i][0].setCellColor(2, true);
-				ds.union(1, getIndex(i, 0));
+				//ds.union(1, getIndex(i, 0));
 			}
 			if(cellLst[i][colSize-1].getRightWall().getIsActive() && cellLst[i][colSize-1].getCellColor() == 0){
 				cellLst[i][colSize-1].setCellColor(2, true);
-				ds.union(1, getIndex(i, colSize-1));
+				//ds.union(1, getIndex(i, colSize-1));
 			}
 		}
 	}
@@ -424,77 +455,103 @@ public class MainSolver {
 	 * Draw line between in border, if the Cell comes in 'Inside' part 
 	 */
 	
-	private static void colorBorderLines(){
+	private static boolean colorBorderLines(){
 		int i;
+		boolean to_ret = false;
 		for( i = 0 ; i < colSize; ++i){
-			if(cellLst[0][i].getCellColor() > 1 && !cellLst[0][i].getTopWall().getIsActive()){
+			if(cellLst[0][i].getCellColor() > 1 && !cellLst[0][i].getTopWall().getFixed()){
 				cellLst[0][i].getTopWall().setFixed(true, true);
-				ds.union(1, getIndex(0, i));
+				to_ret = true;
+				//ds.union(1, getIndex(0, i));
 			}
-			if(cellLst[rowSize-1][i].getCellColor() > 1 && !cellLst[rowSize-1][i].getBottomWall().getIsActive()){
+			if(cellLst[rowSize-1][i].getCellColor() > 1 && !cellLst[rowSize-1][i].getBottomWall().getFixed()){
 				cellLst[rowSize-1][i].getBottomWall().setFixed(true, true);
-				ds.union(1, getIndex(rowSize-1, i));
+				to_ret = true;
+				//ds.union(1, getIndex(rowSize-1, i));
 			}
 		}
 		for( i = 0; i < rowSize; ++i){
-			if(cellLst[i][0].getCellColor() > 1 && !cellLst[i][0].getLeftWall().getIsActive() ){
+			if(cellLst[i][0].getCellColor() > 1 && !cellLst[i][0].getLeftWall().getFixed()){
 				cellLst[i][0].getLeftWall().setFixed(true, true);
-				ds.union(1, getIndex(i, 0));
+				to_ret = true;
+				//ds.union(1, getIndex(i, 0));
 			}
-			if(cellLst[i][colSize-1].getCellColor() > 1 && !cellLst[i][colSize-1].getRightWall().getIsActive()){
+			if(cellLst[i][colSize-1].getCellColor() > 1 && !cellLst[i][colSize-1].getRightWall().getFixed()){
 				cellLst[i][colSize-1].getRightWall().setFixed(true, true);
-				ds.union(1, getIndex(i, colSize-1));
+				to_ret = true;
+				//ds.union(1, getIndex(i, colSize-1));
 			}
 		}
+		return to_ret;
 	}
 	/*
 	 * Works!
 	 * Adding Complimentary colors, every time a line is crossed 
 	 */
-	private static void colorLineSep(){
+	private static boolean colorLineSep(){
 		int i, j, color;
 		Cell tmpCell;
+		boolean to_ret = false;
 		for( i = 0; i < rowSize; ++i){
 			for( j = 0; j < colSize; ++j){
 				tmpCell = cellLst[i][j];
 				if(tmpCell.getCellColor() != 0){
 					color = tmpCell.getCellColor() != 1 ? 1 : 2;
-					if(checkBounds(i-1, j) && tmpCell.getTopWall().getIsActive() && cellLst[i-1][j].getCellColor() == 0)
+					if(checkBounds(i-1, j) && tmpCell.getTopWall().getIsActive() && cellLst[i-1][j].getCellColor() == 0){
 						cellLst[i-1][j].setCellColor(color, true);
-					if(checkBounds(i+1, j) && tmpCell.getBottomWall().getIsActive() && cellLst[i+1][j].getCellColor() == 0)
+						to_ret = true;
+					}
+					if(checkBounds(i+1, j) && tmpCell.getBottomWall().getIsActive() && cellLst[i+1][j].getCellColor() == 0){
 						cellLst[i+1][j].setCellColor(color, true);
-					if(checkBounds(i, j+1) && tmpCell.getRightWall().getIsActive() && cellLst[i][j+1].getCellColor() == 0)
+						to_ret = true;
+					}
+					if(checkBounds(i, j+1) && tmpCell.getRightWall().getIsActive() && cellLst[i][j+1].getCellColor() == 0){
 						cellLst[i][j+1].setCellColor(color, true);
-					if(checkBounds(i, j-1) && tmpCell.getLeftWall().getIsActive() && cellLst[i][j-1].getCellColor() == 0)
+						to_ret = true;
+					}
+					if(checkBounds(i, j-1) && tmpCell.getLeftWall().getIsActive() && cellLst[i][j-1].getCellColor() == 0){
 						cellLst[i][j-1].setCellColor(color, true);
+						to_ret = true;
+					}
 				}
 			}
 		}
+		return to_ret;
 	}
 	
 	/*
 	 * Works!
 	 * To draw Lines between cells with different colors
 	 */
-	private static void drawLineColorSep(){
+	private static boolean drawLineColorSep(){
 		int i, j, color;
 		Cell tmpCell;
+		boolean to_ret = false;
 		for( i = 0; i < rowSize; ++i){
 			for( j = 0; j < colSize; ++j ){
 				tmpCell = cellLst[i][j];
 				color = tmpCell.getCellColor();
 				if( color != 0){
-					if(checkBounds(i-1, j) && cellLst[i-1][j].getCellColor() != 0 && !tmpCell.getTopWall().getIsActive())
+					if(checkBounds(i-1, j) && cellLst[i-1][j].getCellColor() != 0 && !tmpCell.getTopWall().getFixed()){
 						tmpCell.getTopWall().setFixed(true, cellLst[i-1][j].getCellColor() != color );
-					if(checkBounds(i+1, j) && cellLst[i+1][j].getCellColor() != 0 && !tmpCell.getBottomWall().getIsActive())
+						to_ret = true;
+					}
+					if(checkBounds(i+1, j) && cellLst[i+1][j].getCellColor() != 0 && !tmpCell.getBottomWall().getFixed()){
 						tmpCell.getBottomWall().setFixed(true, cellLst[i+1][j].getCellColor() != color );
-					if(checkBounds(i, j-1) && cellLst[i][j-1].getCellColor() != 0 && !tmpCell.getLeftWall().getIsActive())
+						to_ret = true;
+					}
+					if(checkBounds(i, j-1) && cellLst[i][j-1].getCellColor() != 0 && !tmpCell.getLeftWall().getFixed()){
 						tmpCell.getLeftWall().setFixed(true, cellLst[i][j-1].getCellColor() != color);
-					if(checkBounds(i, j+1) && cellLst[i][j+1].getCellColor() != 0 && !tmpCell.getRightWall().getIsActive())
+						to_ret = true;
+					}
+					if(checkBounds(i, j+1) && cellLst[i][j+1].getCellColor() != 0 && !tmpCell.getRightWall().getFixed()){
 						tmpCell.getRightWall().setFixed(true, cellLst[i][j+1].getCellColor() != color );
+						to_ret = true;
+					}
 				}
 			}
 		}
+		return to_ret;
 	}
 	
 	/*
@@ -549,9 +606,10 @@ public class MainSolver {
 	 * Works!
 	 * check for '2' cell with 2 adjacent cells having same/different colors
 	 */
-	private static void colorTwoAdj(){
+	private static boolean colorTwoAdj(){
 		int i, j, color;
 		Cell tmpCell;
+		boolean to_ret = false;
 		for( i = 0; i < rowSize; ++i){
 			for( j = 0; j < colSize; ++j){
 				List<Cell> notColored = new ArrayList<Cell>();
@@ -565,40 +623,61 @@ public class MainSolver {
 					oneTwoThreeSubFunction(i, j-1, Color1, Color2, notColored, tmpCell);
 					oneTwoThreeSubFunction(i, j+1, Color1, Color2, notColored, tmpCell);
 					if(Color1.size() == 2){
-						for( Cell k : notColored)
+						for( Cell k : notColored){
 							k.setCellColor(2, true);
+							to_ret = true;
+						}
 					}
 					else if(Color2.size() == 2){
-						for( Cell k : notColored)
+						for( Cell k : notColored){
 							k.setCellColor(1, true);
+							to_ret = true;
+						}
 					}
 					if(color == 1){
-						for( Cell k : Color1)
-							ds.union(getIndex(i, j), getIndex(k.getPosition().getX(), k.getPosition().getY()));
-						for( Cell k : notColored)
-							if(k.getCellColor() == 1)
+						for( Cell k : Color1){
+							if( ds.findSet(getIndex(i, j)) != ds.findSet(getIndex(k.getPosition().getX(), k.getPosition().getY()))){
 								ds.union(getIndex(i, j), getIndex(k.getPosition().getX(), k.getPosition().getY()));
+								to_ret = true;
+							}
+						}
+						for( Cell k : notColored)
+							if(k.getCellColor() == 1 && ds.findSet(getIndex(i, j)) != ds.findSet(getIndex(k.getPosition().getX(), k.getPosition().getY())) ){
+								ds.union(getIndex(i, j), getIndex(k.getPosition().getX(), k.getPosition().getY()));
+								to_ret = true;
+							}
 					}
 					else if(color == 2){
-						for( Cell k : Color2)
-							ds.union(getIndex(i, j), getIndex(k.getPosition().getX(), k.getPosition().getY()));
-						for( Cell k : notColored)
-							if(k.getCellColor() == 2)
+						for( Cell k : Color2){
+							if( ds.findSet(getIndex(i, j)) != ds.findSet(getIndex(k.getPosition().getX(), k.getPosition().getY())) ){
 								ds.union(getIndex(i, j), getIndex(k.getPosition().getX(), k.getPosition().getY()));
+								to_ret = true;
+							}
+						}
+						for( Cell k : notColored)
+							if(k.getCellColor() == 2 && ds.findSet(getIndex(i, j)) != ds.findSet(getIndex(k.getPosition().getX(), k.getPosition().getY())) ){
+								ds.union(getIndex(i, j), getIndex(k.getPosition().getX(), k.getPosition().getY()));
+								to_ret = true;
+							}
 					}
 				}
 			}
 		}
-		colorLineSep();
-		drawLineColorSep();
-		colorBorderLines();
+		boolean tmp = colorLineSep();
+		to_ret = to_ret ? to_ret : tmp;
+		tmp = drawLineColorSep();
+		to_ret = to_ret ? to_ret : tmp;
+		tmp = colorBorderLines();
+		to_ret = to_ret ? to_ret : tmp;
+		return to_ret;
 	}
 	
 	/*
 	 * Works!
 	 */
-	private static void colorOneAdj(){
+	private static boolean colorOneAdj(){
 		int i, j, color;
+		boolean to_ret = false;
 		Cell tmpCell;
 		for( i = 0; i < rowSize; ++i){
 			for( j = 0; j < colSize; ++j){
@@ -613,60 +692,89 @@ public class MainSolver {
 					oneTwoThreeSubFunction(i, j-1, Color1, Color2, notColored, tmpCell);
 					oneTwoThreeSubFunction(i, j+1, Color1, Color2, notColored, tmpCell);
 					if(color == 0 ){
-						if(Color1.size() > 1)
+						if(Color1.size() > 1){
 							tmpCell.setCellColor(1);
-						else if(Color2.size() > 1)
+							to_ret = true;
+						}
+						else if(Color2.size() > 1){
 							tmpCell.setCellColor(2);
+							to_ret = true;
+						}
 						color = tmpCell.getCellColor();
 					}
 					if(color == 1){
 						if(Color2.size() > 0){
-							for( Cell k : notColored)
+							for( Cell k : notColored){
 								k.setCellColor(1, true);
-						}
+								to_ret = true;
+							}
+						}	
 						else if(Color1.size() == 3){
-							for( Cell k : notColored)
+							for( Cell k : notColored){
 								k.setCellColor(2, true);
+								to_ret = true;
+							}
 						}
 					}
 					else if(color == 2){
 						if(Color1.size() > 0){
-							for( Cell k : notColored)
+							for( Cell k : notColored){
 								k.setCellColor(2, true);
+								to_ret = true;
+							}
 						}
 						else if(Color2.size() == 3){
-							for( Cell k : notColored)
+							for( Cell k : notColored){
 								k.setCellColor(1, true);
+								to_ret = true;
+							}
 						}
 					}
 					if(color == 1){
-						for( Cell k : Color1)
-							ds.union(getIndex(i, j), getIndex(k.getPosition().getX(), k.getPosition().getY()));
-						for( Cell k : notColored)
-							if(k.getCellColor() == 1)
+						for( Cell k : Color1){
+							if(ds.findSet(getIndex(i, j)) != ds.findSet(getIndex(k.getPosition().getX(), k.getPosition().getY())) ){
 								ds.union(getIndex(i, j), getIndex(k.getPosition().getX(), k.getPosition().getY()));
+								to_ret = true;
+							}
+						}
+						for( Cell k : notColored)
+							if(k.getCellColor() == 1 && ds.findSet(getIndex(i, j)) != ds.findSet(getIndex(k.getPosition().getX(), k.getPosition().getY())) ){
+								ds.union(getIndex(i, j), getIndex(k.getPosition().getX(), k.getPosition().getY()));
+								to_ret = true;
+							}
 					}
 					else if(color == 2){
-						for( Cell k : Color2)
-							ds.union(getIndex(i, j), getIndex(k.getPosition().getX(), k.getPosition().getY()));
-						for( Cell k : notColored)
-							if(k.getCellColor() == 2)
+						for( Cell k : Color2){
+							if(ds.findSet(getIndex(i, j)) != ds.findSet(getIndex(k.getPosition().getX(), k.getPosition().getY())) ){
 								ds.union(getIndex(i, j), getIndex(k.getPosition().getX(), k.getPosition().getY()));
+								to_ret = true;
+							}
+						}
+						for( Cell k : notColored)
+							if(k.getCellColor() == 2 && ds.findSet(getIndex(i, j)) != ds.findSet(getIndex(k.getPosition().getX(), k.getPosition().getY())) ){
+								ds.union(getIndex(i, j), getIndex(k.getPosition().getX(), k.getPosition().getY()));
+								to_ret = true;
+							}
 					}					
 				}
 			}
 		}
-		colorLineSep();
-		drawLineColorSep();
-		colorBorderLines();
+		boolean tmp = colorLineSep();
+		to_ret = to_ret ? to_ret : tmp;
+		tmp = drawLineColorSep();
+		to_ret = to_ret ? to_ret : tmp;
+		tmp = colorBorderLines();
+		to_ret = to_ret ? to_ret : tmp;
+		return to_ret;
 	}
 	
 	/*
 	 * works!
 	 */
-	private static void colorThreeAdj(){
+	private static boolean colorThreeAdj(){
 		int i, j, color;
 		Cell tmpCell;
+		boolean to_ret = false;
 		for( i = 0; i < rowSize; ++i){
 			for( j = 0; j < colSize; ++j){
 				tmpCell = cellLst[i][j];
@@ -680,50 +788,76 @@ public class MainSolver {
 					oneTwoThreeSubFunction(i, j-1, Color1, Color2, notColored, tmpCell);
 					oneTwoThreeSubFunction(i, j+1, Color1, Color2, notColored, tmpCell);
 					if(color == 0 ){
-						if(Color1.size() > 1)
+						if(Color1.size() > 1){
 							tmpCell.setCellColor(2);
-						else if(Color2.size() > 1)
+							to_ret = true;
+						}
+						else if(Color2.size() > 1){
 							tmpCell.setCellColor(1);
+							to_ret = true;
+						}
 						color = tmpCell.getCellColor();
 					}				
 					if(color == 1){
 						if(Color1.size() > 0){
-							for( Cell k : notColored)
+							for( Cell k : notColored){
 								k.setCellColor(2, true);
+								to_ret = true;
+							}
 						}
 						else if(Color2.size() == 3)
-							for( Cell k : notColored)
+							for( Cell k : notColored){
 								k.setCellColor(1, true);
+								to_ret = true;
+							}
 					}
 					else if(color == 2){
 						if(Color2.size() > 0){
-							for( Cell k : notColored)
+							for( Cell k : notColored){
 								k.setCellColor(1, true);
+								to_ret = true;
+							}
 						}
 						else if(Color1.size() == 3)
-							for( Cell k : notColored)
+							for( Cell k : notColored){
 								k.setCellColor(2, true);
+								to_ret = true;
+							}
 					}
 					if(color == 1){
 						for( Cell k : Color1)
-							ds.union(getIndex(i, j), getIndex(k.getPosition().getX(), k.getPosition().getY()));
-						for( Cell k : notColored)
-							if(k.getCellColor() == 1)
+							if(ds.findSet(getIndex(i, j)) != ds.findSet(getIndex(k.getPosition().getX(), k.getPosition().getY())) ){
 								ds.union(getIndex(i, j), getIndex(k.getPosition().getX(), k.getPosition().getY()));
+								to_ret = true;
+							}
+						for( Cell k : notColored)
+							if(k.getCellColor() == 1 && ds.findSet(getIndex(i, j)) != ds.findSet(getIndex(k.getPosition().getX(), k.getPosition().getY())) ){
+								ds.union(getIndex(i, j), getIndex(k.getPosition().getX(), k.getPosition().getY()));
+								to_ret =true;
+							}
 					}
 					else if(color == 2){
 						for( Cell k : Color2)
-							ds.union(getIndex(i, j), getIndex(k.getPosition().getX(), k.getPosition().getY()));
-						for( Cell k : notColored)
-							if(k.getCellColor() == 2)
+							if(ds.findSet(getIndex(i, j)) != ds.findSet(getIndex(k.getPosition().getX(), k.getPosition().getY())) ){
 								ds.union(getIndex(i, j), getIndex(k.getPosition().getX(), k.getPosition().getY()));
+								to_ret =true;
+							}
+						for( Cell k : notColored)
+							if(k.getCellColor() == 2 && ds.findSet(getIndex(i, j)) != ds.findSet( getIndex(k.getPosition().getX(), k.getPosition().getY())) ){
+								ds.union(getIndex(i, j), getIndex(k.getPosition().getX(), k.getPosition().getY()));
+								to_ret = true;
+							}
 					}
 				}
 			}
 		}
-		colorLineSep();
-		drawLineColorSep();
-		colorBorderLines();
+		boolean tmp = colorLineSep();
+		to_ret = to_ret ? to_ret : tmp;
+		tmp = drawLineColorSep();
+		to_ret = to_ret ? to_ret : tmp;
+		tmp = colorBorderLines();
+		to_ret = to_ret ? to_ret : tmp;
+		return to_ret;
 	}
 	
 	private static void oneTwoThreeSubFunction(int i, int j, List<Cell> Color1, List<Cell> Color2, List<Cell> notColored, Cell tmpCell){
@@ -741,42 +875,62 @@ public class MainSolver {
 	/*
 	 * Works!
 	 */
-	private static void cellAroundCorner(){
+	private static boolean cellAroundCorner(){
 		int i, j, color;
 		Cell tmpCell;
+		boolean to_ret = false, tmp;
 		for( i = 0; i < rowSize; ++i){
 			for( j = 0; j < colSize; ++j){
 				tmpCell = cellLst[i][j];
 				color = tmpCell.getCellColor();
-				if(checkBounds(i+1, j+1) && tmpCell.getRightWall().getIsActive() && tmpCell.getBottomWall().getIsActive())
-					cellAroundCornerSubFunction(i+1, j+1, tmpCell, color);
-				if(checkBounds(i+1, j-1) && tmpCell.getLeftWall().getIsActive() && tmpCell.getBottomWall().getIsActive())
-					cellAroundCornerSubFunction(i+1, j-1, tmpCell, color);
-				if(checkBounds(i-1, j+1) && tmpCell.getRightWall().getIsActive() && tmpCell.getTopWall().getIsActive())
-					cellAroundCornerSubFunction(i-1, j+1, tmpCell, color);
-				if(checkBounds(i-1, j-1) && tmpCell.getLeftWall().getIsActive() && tmpCell.getTopWall().getIsActive())
-					cellAroundCornerSubFunction(i-1, j-1, tmpCell, color);
+				if(checkBounds(i+1, j+1) && tmpCell.getRightWall().getIsActive() && tmpCell.getBottomWall().getIsActive()){
+					tmp = cellAroundCornerSubFunction(i+1, j+1, tmpCell, color);
+					to_ret = to_ret ? to_ret : tmp;
+				}
+				if(checkBounds(i+1, j-1) && tmpCell.getLeftWall().getIsActive() && tmpCell.getBottomWall().getIsActive()){
+					tmp = cellAroundCornerSubFunction(i+1, j-1, tmpCell, color);
+					to_ret = to_ret ? to_ret : tmp;
+				}
+				if(checkBounds(i-1, j+1) && tmpCell.getRightWall().getIsActive() && tmpCell.getTopWall().getIsActive()){
+					tmp = cellAroundCornerSubFunction(i-1, j+1, tmpCell, color);
+					to_ret = to_ret ? to_ret : tmp;
+				}
+				if(checkBounds(i-1, j-1) && tmpCell.getLeftWall().getIsActive() && tmpCell.getTopWall().getIsActive()){
+					tmp = cellAroundCornerSubFunction(i-1, j-1, tmpCell, color);
+					to_ret = to_ret ? to_ret : tmp;
+				}
 			}
 		}
-		colorLineSep();
-		drawLineColorSep();
-		colorBorderLines();
+		tmp = colorLineSep();
+		to_ret = to_ret ? to_ret : tmp;
+		tmp = drawLineColorSep();
+		to_ret = to_ret ? to_ret : tmp;
+		tmp = colorBorderLines();
+		to_ret = to_ret ? to_ret : tmp;
+		return to_ret;
 	}
 	
-	private static void cellAroundCornerSubFunction(int i, int j, Cell tmpCell, int color){
+	private static boolean cellAroundCornerSubFunction(int i, int j, Cell tmpCell, int color){
+		boolean to_ret = false;
 		if(color != 0){
-			if(cellLst[i][j].getCellColor() == 0)
+			if(cellLst[i][j].getCellColor() == 0){
 				cellLst[i][j].setCellColor(color == 1 ? 2 : 1, true);
+				to_ret = true;
+			}
 		}
 		else{
-			if(cellLst[i][j].getCellColor() != 0)
+			if(cellLst[i][j].getCellColor() != 0){
 				tmpCell.setCellColor(cellLst[i][j].getCellColor() == 1 ? 2 : 1, true);
+				to_ret = true;
+			}
 		}
+		return to_ret;
 	}
 	
-	private static void oneCellNotColored(){
+	private static boolean oneCellNotColored(){
 		int i, j, color;
 		Cell tmpCell;
+		boolean to_ret = false;
 		for( i = 0; i < rowSize; ++i){
 			for( j = 0; j < colSize; ++j){
 				tmpCell = cellLst[i][j];
@@ -790,36 +944,53 @@ public class MainSolver {
 					oneTwoThreeSubFunction(i, j-1, Color1, Color2, notColored, tmpCell);
 					oneTwoThreeSubFunction(i, j+1, Color1, Color2, notColored, tmpCell);
 					if(color == 0 && Color1.size() < 2 && Color2.size() < 2){
-						if(checkBounds(i-1, j) && tmpCell.getTopWall().getIsActive() && cellLst[i-1][j].getCellColor() == 0)
+						if(checkBounds(i-1, j) && tmpCell.getTopWall().getIsActive() && cellLst[i-1][j].getCellColor() == 0){
 							tmpCell.setCellColor(Color1.size()==0 ? 2 : 1, true);
-						else if(checkBounds(i+1,j) && tmpCell.getBottomWall().getIsActive() && cellLst[i+1][j].getCellColor() == 0)
+							to_ret = true;
+						}
+						else if(checkBounds(i+1,j) && tmpCell.getBottomWall().getIsActive() && cellLst[i+1][j].getCellColor() == 0){
 							tmpCell.setCellColor(Color1.size()==0 ? 2 : 1, true);
-						else if(checkBounds(i,j+1) && tmpCell.getRightWall().getIsActive() && cellLst[i][j+1].getCellColor() == 0)
+							to_ret = true;
+						}
+						else if(checkBounds(i,j+1) && tmpCell.getRightWall().getIsActive() && cellLst[i][j+1].getCellColor() == 0){
 							tmpCell.setCellColor(Color1.size()==0 ? 2 : 1, true);
-						else if(checkBounds(i,j-1) && tmpCell.getLeftWall().getIsActive() && cellLst[i][j-1].getCellColor() == 0)
+							to_ret = true;
+						}
+						else if(checkBounds(i,j-1) && tmpCell.getLeftWall().getIsActive() && cellLst[i][j-1].getCellColor() == 0){
 							tmpCell.setCellColor(Color1.size()==0 ? 2 : 1, true);						
+							to_ret = true;
+						}
 					}
 				}
 			}
 		}
-		colorLineSep();
-		drawLineColorSep();
-		colorBorderLines();
+		boolean tmp = colorLineSep();
+		to_ret = to_ret ? to_ret : tmp;
+		tmp = drawLineColorSep();
+		to_ret = to_ret ? to_ret : tmp;
+		tmp = colorBorderLines();
+		to_ret = to_ret ? to_ret : tmp;
+		return to_ret;
 	}
 	
-	private static void colorZeroAdj(){
+	private static boolean colorZeroAdj(){
 		int i, j, color;
 		Cell tmpCell;
+		boolean to_ret = false, tmp;
 		for( i = 0; i < rowSize; ++i){
 			for( j = 0; j < colSize; ++j){
 				tmpCell = cellLst[i][j];
 				color = tmpCell.getCellColor();
 				if(tmpCell.getNodeVal() == 0){
 					if(color != 0){
-						zeroSubFunction(i+1, j, color);
-						zeroSubFunction(i-1, j, color);
-						zeroSubFunction(i, j+1, color);
-						zeroSubFunction(i, j-1, color);
+						tmp = zeroSubFunction(i+1, j, color);
+						to_ret = to_ret ? to_ret : tmp;
+						tmp = zeroSubFunction(i-1, j, color);
+						to_ret = to_ret ? to_ret : tmp;
+						tmp = zeroSubFunction(i, j+1, color);
+						to_ret = to_ret ? to_ret : tmp;
+						tmp = zeroSubFunction(i, j-1, color);
+						to_ret = to_ret ? to_ret : tmp;
 					}
 					else{
 						List<Cell> Color1 = new ArrayList<Cell>();
@@ -830,11 +1001,13 @@ public class MainSolver {
 						oneTwoThreeSubFunction(i, j-1, Color1, Color2, notColored, tmpCell);
 						oneTwoThreeSubFunction(i, j+1, Color1, Color2, notColored, tmpCell);
 						if(Color1.size() > 0){
+							to_ret = true;
 							tmpCell.setCellColor(1, true);
 							for( Cell k : notColored)
 								k.setCellColor(1, true);
 						}
 						else if( Color2.size() > 0){
+							to_ret = true;
 							tmpCell.setCellColor(2, true);
 							for( Cell k : notColored)
 								k.setCellColor(2, true);
@@ -843,26 +1016,215 @@ public class MainSolver {
 				}
 			}
 		}
+		tmp = colorLineSep();
+		to_ret = to_ret ? to_ret : tmp;
+		tmp = drawLineColorSep();
+		to_ret = to_ret ? to_ret : tmp;
+		tmp = colorBorderLines();
+		to_ret = to_ret ? to_ret : tmp;
+		return to_ret;
 	}
 	
-	private static void zeroSubFunction(int i, int j, int color){
-		if(checkBounds(i, j) && cellLst[i][j].getCellColor() == 0)
+	private static boolean zeroSubFunction(int i, int j, int color){
+		if(checkBounds(i, j) && cellLst[i][j].getCellColor() == 0){
 			cellLst[i][j].setCellColor(color, true);
+			return true;
+		}
+		return false;
 	}
 	
-	private static void connectAdj(){
-		int i, j, color;
+	private static boolean connectAdjSets(){
+		int i, j, color, parent;
 		Cell tmpCell;
+		boolean to_ret = false, tmp;
 		for( i = 0; i < rowSize; ++i){
 			for( j = 0; j < colSize; ++j){
 				tmpCell = cellLst[i][j];
 				color = tmpCell.getCellColor();
 				if(color != 0){
-					if(checkBounds(i+1, j) && cellLst[i+1][j].getCellColor() == color){
-						
+					if(( (checkBounds(i+1, j) && cellLst[i+1][j].getCellColor() == color) || ( !checkBounds(i+1, j) && color == 1)) 
+							&& ds.findSet(getIndex(i, j)) != ds.findSet( getIndex(i+1,j))){
+						ds.union(getIndex(i, j), getIndex(i+1,j));
+						to_ret = true;
+					}
+					if(( (checkBounds(i-1, j) && cellLst[i-1][j].getCellColor() == color) || ( !checkBounds(i-1, j) && color == 1))
+							&& ds.findSet(getIndex(i, j)) != ds.findSet( getIndex(i-1,j))){
+						ds.union(getIndex(i, j), getIndex(i-1, j));
+						to_ret = true;
+					}
+					if( ((checkBounds(i, j-1) && cellLst[i][j-1].getCellColor() == color) || ( !checkBounds(i, j-1) && color == 1))
+							&& ds.findSet(getIndex(i, j)) != ds.findSet( getIndex(i,j-1))){
+						ds.union(getIndex(i, j), getIndex(i, j-1));
+						to_ret = true;
+					}
+					if( ((checkBounds(i, j+1) && cellLst[i][j+1].getCellColor() == color) || ( !checkBounds(i, j+1) && color == 1))
+							&& ds.findSet(getIndex(i, j)) != ds.findSet( getIndex(i,j+1))){
+						ds.union(getIndex(i, j), getIndex(i, j+1));
+						to_ret = true;
 					}
 				}
 			}
 		}
+		
+		for( i = 0; i < rowSize; ++i){
+			for( j = 0; j < colSize; ++j){
+				tmpCell = cellLst[i][j];
+				color = tmpCell.getCellColor();
+				parent = ds.findSet(getIndex(i, j));
+				if(color == 0){
+					if(ds.findSet(getIndex(i+1, j)) == parent && !(checkBounds(i+1, j) && cellLst[i+1][j].getCellColor() == 0)){
+						tmpCell.setCellColor(checkBounds(i+1, j) ? cellLst[i+1][j].getCellColor() : 1, true);
+						to_ret = true;
+					}
+					else if(ds.findSet(getIndex(i-1, j)) == parent  && !(checkBounds(i-1, j) && cellLst[i-1][j].getCellColor() == 0)){
+						tmpCell.setCellColor(checkBounds(i-1, j) ? cellLst[i-1][j].getCellColor() : 1, true);
+						to_ret = true;
+					}
+					else if(ds.findSet(getIndex(i, j+1)) == parent && !(checkBounds(i, j+1) && cellLst[i][j+1].getCellColor() == 0)){
+						tmpCell.setCellColor(checkBounds(i, j+1) ? cellLst[i][j+1].getCellColor() : 1, true);
+						to_ret = true;
+					}
+					else if(ds.findSet(getIndex(i, j-1)) == parent && !(checkBounds(i, j-1) && cellLst[i][j-1].getCellColor() == 0)){
+						tmpCell.setCellColor(checkBounds(i, j-1) ? cellLst[i][j-1].getCellColor() : 1, true);
+						to_ret = true;
+					}
+				}
+				color = tmpCell.getCellColor();
+				parent = ds.findSet(getIndex(i, j));
+				if(color != 0){
+					if(checkBounds(i+1, j) && ds.findSet(getIndex(i+1, j)) == parent && cellLst[i+1][j].getCellColor() == 0){
+						cellLst[i+1][j].setCellColor(color, true);
+						to_ret = true;
+					}
+					if(checkBounds(i-1, j) && ds.findSet(getIndex(i-1, j)) == parent && cellLst[i-1][j].getCellColor() == 0){
+						cellLst[i-1][j].setCellColor(color, true);
+						to_ret = true;
+					}
+					if(checkBounds(i, j+1) && ds.findSet(getIndex(i, j+1)) == parent && cellLst[i][j+1].getCellColor() == 0){
+						cellLst[i][j+1].setCellColor(color, true);
+						to_ret = true;
+					}
+					if(checkBounds(i, j-1) && ds.findSet(getIndex(i, j-1)) == parent && cellLst[i][j-1].getCellColor() == 0){
+						cellLst[i][j-1].setCellColor(color, true);
+						to_ret = true;
+					}
+				}
+			}
+		}
+		
+		tmp = colorLineSep();
+		to_ret = to_ret ? to_ret : tmp;
+		tmp = drawLineColorSep();
+		to_ret = to_ret ? to_ret : tmp;
+		tmp = colorBorderLines();
+		to_ret = to_ret ? to_ret : tmp;
+		return to_ret;
+	}
+	
+	private static boolean CheckBoardStateCorrect(){
+		int i, j, color, parent;
+		Cell tmpCell;
+		for( i = 0; i < rowSize; ++i){
+			for( j = 0; j < colSize; ++j){
+				tmpCell = cellLst[i][j];
+				color = tmpCell.getCellColor();
+				parent = ds.findSet(getIndex(i, j));
+				if(color != 0){
+					if(checkBounds(i+1, j)){
+						if(tmpCell.getBottomWall().getIsActive() && (cellLst[i+1][j].getCellColor() == color || parent == ds.findSet(getIndex(i+1,j)) ))
+							return false;
+					}
+					else if(color == 1 && tmpCell.getBottomWall().getIsActive() )
+						return false;
+					if(checkBounds(i-1, j)){
+						if(tmpCell.getTopWall().getIsActive() && (cellLst[i-1][j].getCellColor() == color || parent == ds.findSet(getIndex(i-1,j) )))
+							return false;
+					}
+					else if(color == 1 && tmpCell.getTopWall().getIsActive())
+						return false;
+					if(checkBounds(i, j+1)){
+						if(tmpCell.getRightWall().getIsActive() && (cellLst[i][j+1].getCellColor() == color || parent == ds.findSet(getIndex(i,j+1) )))
+							return false;
+					}
+					else if(color == 1 && tmpCell.getRightWall().getIsActive() )
+						return false;
+					if(checkBounds(i, j-1)){
+						if(tmpCell.getLeftWall().getIsActive() && ( cellLst[i][j-1].getCellColor() == color || parent == ds.findSet(getIndex(i,j-1) )))
+							return false;
+					}
+					else if(color == 1 && tmpCell.getLeftWall().getIsActive())
+						return false;
+				}
+				if(tmpCell.getNodeVal() != -1 && tmpCell.getNodeVal() < tmpCell.getActiveWalls())
+					return false;
+			}
+		}
+		return true;
+	}
+	
+	private static boolean isGameOver(){
+		int i, j, insParent = 1, tmp;
+		boolean setFlag = true;
+		for( i = 0; i < rowSize; ++i)
+			for( j = 0; j < colSize; ++j){
+				if(cellLst[i][j].getNodeVal() != -1 && cellLst[i][j].getNodeVal() != cellLst[i][j].getActiveWalls())
+					return false;
+				if( setFlag && cellLst[i][j].getCellColor() == 2 ){
+					insParent = ds.findSet(getIndex(i, j));
+					setFlag = false;
+				}
+				tmp = ds.findSet(getIndex(i, j));
+				if(cellLst[i][j].getCellColor() < 1 || (tmp != insParent && tmp != 0))
+					return false;
+			}
+		return true;
+	}
+	
+	private static boolean backTrack(){
+		boolean flag = true, tmpflag;
+		while(flag){
+			if(!CheckBoardStateCorrect())
+				return false;
+			flag = colorOneAdj();
+			tmpflag = colorTwoAdj();
+			flag = flag ? flag : tmpflag;
+			tmpflag = colorThreeAdj();
+			flag = flag ? flag : tmpflag;
+			tmpflag = colorZeroAdj();
+			flag = flag ? flag : tmpflag;
+			tmpflag = cellAroundCorner();
+			flag = flag ? flag : tmpflag;
+			tmpflag = oneCellNotColored();
+			flag = flag ? flag : tmpflag;
+			tmpflag = connectAdjSets();
+			flag = flag ? flag : tmpflag;
+			if(isGameOver())
+				return true;
+		}
+		Coordinate emptyCellCoordinate = getFirstNonColored();
+		if(emptyCellCoordinate == null){
+			++level;
+			if(level%1000 == 0)
+				System.out.println(level);
+			return false;
+		}
+		Cell[][] cellcopy = getCellLstCopy(cellLst);
+		DisjointSet dscopy = ds.getCopy();
+		cellLst[emptyCellCoordinate.getX()][emptyCellCoordinate.getY()].setCellColor(1, true);
+		if(backTrack())
+			return true;
+		ds = dscopy.getCopy();
+		cellLst = getCellLstCopy(cellcopy);
+		cellLst[emptyCellCoordinate.getX()][emptyCellCoordinate.getY()].setCellColor(2, true);
+		return backTrack();
+	}
+	
+	private static Coordinate getFirstNonColored(){
+		int i, j;
+		for( i = 0; i < rowSize; ++i)
+			for( j = 0; j < colSize; ++j)
+				if(cellLst[i][j].getCellColor() == 0)
+					return (new Coordinate(i, j));
+		return null;
 	}
 }

@@ -38,8 +38,8 @@ public class Wall {
 		this.fixed = b;
 	}
 	public void setFixed(boolean a, boolean b){
-		this.setIsActive(b);
 		this.fixed = a;
+		this.setIsActive(b);
 	}
 
 	
@@ -60,5 +60,11 @@ public class Wall {
 	}
 	public boolean getFixed(){
 		return this.fixed;
+	}
+	
+	public Wall getCopy(){
+		Wall copy = new Wall(this.wallStart, this.Horzn);
+		copy.setFixed(this.fixed, this.isActive);
+		return copy;
 	}
 }
