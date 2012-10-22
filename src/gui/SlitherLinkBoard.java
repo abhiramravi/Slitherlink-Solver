@@ -221,6 +221,7 @@ public class SlitherLinkBoard extends JFrame
 				System.out.println();
 			}
 			
+			
 			MainSolver.basicSolver();
 			printWalls();
 			colorCells();
