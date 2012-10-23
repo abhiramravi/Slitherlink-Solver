@@ -141,9 +141,10 @@ public class SlitherLinkBoard extends JFrame
 		Vector<Wall> wList = Grid.getAllWalls();
 		for (Wall w : wList)
 		{
+			/*
 			System.out.println(w.getWallStart().getX() + " "
 					+ w.getWallStart().getY() + " " + w.getIsActive()
-					+ " horiz = " + w.getHorzn());
+					+ " horiz = " + w.getHorzn());*/
 			if (w.getIsActive())
 			{
 				Coordinate c = w.getWallStart();
@@ -219,7 +220,7 @@ public class SlitherLinkBoard extends JFrame
 			}
 			/* The Main part of the computation */
 			
-			 //MainSolver.basicSolver(); printWalls(); colorCells();
+			// MainSolver.basicSolver(); printWalls(); colorCells();
 			 
 			/* The Main part of the computation ends */
 			
@@ -230,7 +231,8 @@ public class SlitherLinkBoard extends JFrame
 		}
 
 	}
-
+	
+	int sleeper = 200;
 	Runnable r = new Runnable()
 	{
 
@@ -243,7 +245,7 @@ public class SlitherLinkBoard extends JFrame
 				simulateMove(m);
 				try
 				{
-					Thread.sleep(1000);
+					Thread.sleep(sleeper);
 				} catch (InterruptedException e)
 				{
 					e.printStackTrace();
@@ -285,7 +287,7 @@ public class SlitherLinkBoard extends JFrame
 	public void wallMove(MoveObj m)
 	{
 		Wall w = m.getWallMove();
-		if (w.getIsActive())
+		if (w.getIsActive() || w.getFixed())
 		{
 			Coordinate c = w.getWallStart();
 			System.out.println("Activate X = " + c.getX() + "; Y = " + c.getY());
@@ -443,6 +445,28 @@ public class SlitherLinkBoard extends JFrame
 		menuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_1,
 				ActionEvent.ALT_MASK));
 		menuItem.addActionListener(solver);
+		menuItem.getAccessibleContext().setAccessibleDescription(
+				"This solves the game");
+		menu.add(menuItem);
+		
+		menuItem = new JMenuItem("Delay", KeyEvent.VK_T);
+		menuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_1,
+				ActionEvent.ALT_MASK));
+		menuItem.addActionListener(new ActionListener()
+		{
+			
+			@Override
+			public void actionPerformed(ActionEvent arg0)
+			{
+				String a = JOptionPane.showInputDialog("Enter delay(ms) for move display");
+				try{
+				sleeper = Integer.parseInt(a);
+				}catch(Exception e)
+				{
+					System.out.print("Failed to convert to int\n");
+				}
+			}
+		});
 		menuItem.getAccessibleContext().setAccessibleDescription(
 				"This solves the game");
 		menu.add(menuItem);
