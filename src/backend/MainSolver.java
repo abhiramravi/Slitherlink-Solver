@@ -1,5 +1,7 @@
 package backend;
 
+import gui.MoveObj;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Vector;
@@ -17,6 +19,7 @@ public class MainSolver {
 	private static DisjointSet ds;
 	private static int level;
 	private static int[][] posArr;
+	private static ArrayList<MoveObj> allMoveLst;
 	
 	public static boolean checkBounds(int x, int y){
 		return ( x < 0 || y < 0 || x >= rowSize || y >= colSize) ? false :  true;
@@ -45,6 +48,7 @@ public class MainSolver {
 		rowSize = Grid.getRows();
 		colSize = Grid.getColumns();
 		posArr = new int[rowSize+1][colSize+1];
+		allMoveLst = Grid.allMoveLst;
 		level = 0;
 		
 		Cell tmpCell;
@@ -57,15 +61,24 @@ public class MainSolver {
 		 */
 		for( i = 0; i < rowSize; ++i){
 			for( j = 0; j < colSize; ++j){
-				if(cellLst[i][j].getNodeVal() == 0){
-					cellLst[i][j].getLeftWall().setFixed(true, false);
-					cellLst[i][j].getRightWall().setFixed(true, false);
-					cellLst[i][j].getBottomWall().setFixed(true, false);
-					cellLst[i][j].getTopWall().setFixed(true, false);
-					ds.union( getIndex(i, j), getIndex(i+1, j));
-					ds.union( getIndex(i, j), getIndex(i-1, j));
-					ds.union( getIndex(i, j), getIndex(i, j+1));
-					ds.union( getIndex(i, j), getIndex(i, j-1));
+				tmpCell = cellLst[i][j];
+				if(tmpCell.getNodeVal() == 0){
+					if(!tmpCell.getLeftWall().getFixed()){
+						tmpCell.getLeftWall().setFixed(true, false);
+						ds.union( getIndex(i, j), getIndex(i+1, j));
+					}
+					if(!tmpCell.getRightWall().getFixed()){
+						tmpCell.getRightWall().setFixed(true, false);
+						ds.union( getIndex(i, j), getIndex(i-1, j));
+					}
+					if(!tmpCell.getBottomWall().getFixed()){
+						tmpCell.getBottomWall().setFixed(true, false);
+						ds.union( getIndex(i, j), getIndex(i, j+1));
+					}
+					if(!tmpCell.getTopWall().getFixed()){
+						tmpCell.getTopWall().setFixed(true, false);
+						ds.union( getIndex(i, j), getIndex(i, j-1));
+					}
 				}
 			}
 		}
@@ -80,55 +93,95 @@ public class MainSolver {
 				if(cellLst[i][j].getNodeVal() == 0){
 					if(checkBounds(i+1,j) && cellLst[i+1][j].getNodeVal() == 3){
 						tmpCell = cellLst[i+1][j];
-						if(!tmpCell.getBottomWall().getFixed())
+						if(!tmpCell.getBottomWall().getFixed()){
 							tmpCell.getBottomWall().setFixed(true, true);
-						if(!tmpCell.getLeftWall().getFixed())
+							allMoveLst.add(new MoveObj(tmpCell.getBottomWall()));
+						}
+						if(!tmpCell.getLeftWall().getFixed()){
 							tmpCell.getLeftWall().setFixed(true, true);
-						if(!tmpCell.getRightWall().getFixed())
+							allMoveLst.add(new MoveObj(tmpCell.getLeftWall()));
+						}
+						if(!tmpCell.getRightWall().getFixed()){
 							tmpCell.getRightWall().setFixed(true, true);
-						if(checkBounds(i, j-1) && !cellLst[i][j-1].getBottomWall().getFixed())
+							allMoveLst.add(new MoveObj(tmpCell.getRightWall()));
+						}
+						if(checkBounds(i, j-1) && !cellLst[i][j-1].getBottomWall().getFixed()){
 							cellLst[i][j-1].getBottomWall().setFixed(true, true);
-						if(checkBounds(i, j+1) && !cellLst[i][j+1].getBottomWall().getFixed())
-							cellLst[i][j+1].getBottomWall().setFixed(true, true);						
+							allMoveLst.add(new MoveObj(cellLst[i][j-1].getBottomWall()));
+						}
+						if(checkBounds(i, j+1) && !cellLst[i][j+1].getBottomWall().getFixed()){
+							cellLst[i][j+1].getBottomWall().setFixed(true, true);
+							allMoveLst.add(new MoveObj(cellLst[i][j+1].getBottomWall()));
+						}
 					}
 					if(checkBounds(i-1, j) && cellLst[i-1][j].getNodeVal() == 3){
 						tmpCell = cellLst[i-1][j];
-						if(!tmpCell.getTopWall().getFixed())
+						if(!tmpCell.getTopWall().getFixed()){
 							tmpCell.getTopWall().setFixed(true, true);
-						if(!tmpCell.getLeftWall().getFixed())
+							allMoveLst.add(new MoveObj(tmpCell.getTopWall()));
+						}
+						if(!tmpCell.getLeftWall().getFixed()){
 							tmpCell.getLeftWall().setFixed(true, true);
-						if(!tmpCell.getRightWall().getFixed())
+							allMoveLst.add(new MoveObj(tmpCell.getLeftWall()));
+						}
+						if(!tmpCell.getRightWall().getFixed()){
 							tmpCell.getRightWall().setFixed(true, true);
-						if(checkBounds(i, j-1) && !cellLst[i][j-1].getTopWall().getFixed())
+							allMoveLst.add(new MoveObj(tmpCell.getRightWall()));
+						}
+						if(checkBounds(i, j-1) && !cellLst[i][j-1].getTopWall().getFixed()){
 							cellLst[i][j-1].getTopWall().setFixed(true, true);
-						if(checkBounds(i, j+1) && !cellLst[i][j+1].getTopWall().getFixed())
+							allMoveLst.add(new MoveObj(cellLst[i][j-1].getTopWall()));
+						}
+						if(checkBounds(i, j+1) && !cellLst[i][j+1].getTopWall().getFixed()){
 							cellLst[i][j+1].getTopWall().setFixed(true, true);
+							allMoveLst.add(new MoveObj(cellLst[i][j+1].getTopWall()));
+						}
 					}
 					if(checkBounds(i, j-1) && cellLst[i][j-1].getNodeVal() == 3){
 						tmpCell = cellLst[i][j-1];
-						if(!tmpCell.getTopWall().getFixed())
+						if(!tmpCell.getTopWall().getFixed()){
 							tmpCell.getTopWall().setFixed(true, true);
-						if(!tmpCell.getLeftWall().getFixed())
+							allMoveLst.add(new MoveObj(tmpCell.getTopWall()));
+						}
+						if(!tmpCell.getLeftWall().getFixed()){
 							tmpCell.getLeftWall().setFixed(true, true);
-						if(!tmpCell.getBottomWall().getFixed())
+							allMoveLst.add(new MoveObj(tmpCell.getLeftWall()));
+						}
+						if(!tmpCell.getBottomWall().getFixed()){
 							tmpCell.getBottomWall().setFixed(true, true);
-						if(checkBounds(i+1, j) && !cellLst[i+1][j].getLeftWall().getFixed())
+							allMoveLst.add(new MoveObj(tmpCell.getBottomWall()));
+						}
+						if(checkBounds(i+1, j) && !cellLst[i+1][j].getLeftWall().getFixed()){
 							cellLst[i+1][j].getLeftWall().setFixed(true, true);
-						if(checkBounds(i-1, j) && !cellLst[i-1][j].getLeftWall().getFixed())
+							allMoveLst.add(new MoveObj(cellLst[i+1][j].getLeftWall()));
+						}
+						if(checkBounds(i-1, j) && !cellLst[i-1][j].getLeftWall().getFixed()){
 							cellLst[i-1][j].getLeftWall().setFixed(true, true);
+							allMoveLst.add(new MoveObj(cellLst[i-1][j].getLeftWall()));
+						}
 					}
 					if(checkBounds(i, j+1) && cellLst[i][j+1].getNodeVal() == 3){
 						tmpCell = cellLst[i][j+1];
-						if(!tmpCell.getTopWall().getFixed())
+						if(!tmpCell.getTopWall().getFixed()){
 							tmpCell.getTopWall().setFixed(true, true);
-						if(!tmpCell.getRightWall().getFixed())
+							allMoveLst.add(new MoveObj(tmpCell.getTopWall()));
+						}
+						if(!tmpCell.getRightWall().getFixed()){
 							tmpCell.getRightWall().setFixed(true, true);
-						if(!tmpCell.getBottomWall().getFixed())
+							allMoveLst.add(new MoveObj(tmpCell.getRightWall()));
+						}
+						if(!tmpCell.getBottomWall().getFixed()){
 							tmpCell.getBottomWall().setFixed(true, true);
-						if(checkBounds(i+1, j) && !cellLst[i+1][j].getRightWall().getFixed())
+							allMoveLst.add(new MoveObj(tmpCell.getBottomWall()));
+						}
+						if(checkBounds(i+1, j) && !cellLst[i+1][j].getRightWall().getFixed()){
 							cellLst[i+1][j].getRightWall().setFixed(true, true);
-						if(checkBounds(i-1, j) && !cellLst[i-1][j].getRightWall().getFixed())
+							allMoveLst.add(new MoveObj(cellLst[i+1][j].getRightWall()));
+						}
+						if(checkBounds(i-1, j) && !cellLst[i-1][j].getRightWall().getFixed()){
 							cellLst[i-1][j].getRightWall().setFixed(true, true);
+							allMoveLst.add(new MoveObj(cellLst[i-1][j].getRightWall()));
+						}
 					}			
 				}
 			}
@@ -144,31 +197,47 @@ public class MainSolver {
 				if(cellLst[i][j].getNodeVal() == 0){
 					if(checkBounds(i+1, j+1) && cellLst[i+1][j+1].getNodeVal() == 3){
 						tmpCell = cellLst[i+1][j+1];
-						if(!tmpCell.getLeftWall().getFixed())
+						if(!tmpCell.getLeftWall().getFixed()){
 							tmpCell.getLeftWall().setFixed(true, true);
-						if(!tmpCell.getTopWall().getFixed())
+							allMoveLst.add(new MoveObj(tmpCell.getLeftWall()));
+						}
+						if(!tmpCell.getTopWall().getFixed()){
 							tmpCell.getTopWall().setFixed(true, true);
+							allMoveLst.add(new MoveObj(tmpCell.getTopWall()));
+						}
 					}
 					if(checkBounds(i-1, j-1) && cellLst[i-1][j-1].getNodeVal() == 3){
 						tmpCell = cellLst[i-1][j-1];
-						if(!tmpCell.getBottomWall().getFixed())
+						if(!tmpCell.getBottomWall().getFixed()){
 							tmpCell.getBottomWall().setFixed(true, true);
-						if(!tmpCell.getRightWall().getFixed())
+							allMoveLst.add(new MoveObj(tmpCell.getBottomWall()));
+						}
+						if(!tmpCell.getRightWall().getFixed()){
 							tmpCell.getRightWall().setFixed(true, true);
+							allMoveLst.add(new MoveObj(tmpCell.getRightWall()));
+						}
 					}
 					if(checkBounds(i+1, j-1) && cellLst[i+1][j-1].getNodeVal() == 3){
 						tmpCell = cellLst[i+1][j-1];
-						if(!tmpCell.getRightWall().getFixed())
+						if(!tmpCell.getRightWall().getFixed()){
 							tmpCell.getRightWall().setFixed(true, true);
-						if(!tmpCell.getTopWall().getFixed())
+							allMoveLst.add(new MoveObj(tmpCell.getRightWall()));
+						}
+						if(!tmpCell.getTopWall().getFixed()){
 							tmpCell.getTopWall().setFixed(true, true);
+							allMoveLst.add(new MoveObj(tmpCell.getTopWall()));
+						}
 					}
 					if(checkBounds(i-1, j+1) && cellLst[i-1][j+1].getNodeVal() == 3){
 						tmpCell = cellLst[i-1][j+1];
-						if(!tmpCell.getLeftWall().getFixed())
+						if(!tmpCell.getLeftWall().getFixed()){
 							tmpCell.getLeftWall().setFixed(true, true);
-						if(!tmpCell.getBottomWall().getFixed())
+							allMoveLst.add(new MoveObj(tmpCell.getLeftWall()));
+						}
+						if(!tmpCell.getBottomWall().getFixed()){
 							tmpCell.getBottomWall().setFixed(true, true);
+							allMoveLst.add(new MoveObj(tmpCell.getBottomWall()));
+						}
 					}
 				}
 			}
@@ -183,36 +252,60 @@ public class MainSolver {
 			for( j = 0; j < colSize; ++j){
 				if(cellLst[i][j].getNodeVal() == 3){
 					if(checkBounds(i, j+1) && cellLst[i][j+1].getNodeVal() == 3){
-						if(!cellLst[i][j].getLeftWall().getFixed())
+						if(!cellLst[i][j].getLeftWall().getFixed()){
 							cellLst[i][j].getLeftWall().setFixed(true, true);
-						if(!cellLst[i][j].getRightWall().getFixed())
+							allMoveLst.add( new MoveObj(cellLst[i][j].getLeftWall()));
+						}
+						if(!cellLst[i][j].getRightWall().getFixed()){
 							cellLst[i][j].getRightWall().setFixed(true, true);
-						if(!cellLst[i][j+1].getRightWall().getFixed())
+							allMoveLst.add( new MoveObj(cellLst[i][j].getRightWall()));
+						}
+						if(!cellLst[i][j+1].getRightWall().getFixed()){
 							cellLst[i][j+1].getRightWall().setFixed(true, true);
+							allMoveLst.add( new MoveObj(cellLst[i][j+1].getRightWall()));
+						}
 					}
 					if(checkBounds(i, j-1) && cellLst[i][j-1].getNodeVal() == 3){
-						if(!cellLst[i][j].getLeftWall().getFixed())
+						if(!cellLst[i][j].getLeftWall().getFixed()){
 							cellLst[i][j].getLeftWall().setFixed(true, true);
-						if(!cellLst[i][j].getRightWall().getFixed())
+							allMoveLst.add( new MoveObj(cellLst[i][j].getLeftWall()));
+						}
+						if(!cellLst[i][j].getRightWall().getFixed()){
 							cellLst[i][j].getRightWall().setFixed(true, true);
-						if(!cellLst[i][j-1].getLeftWall().getFixed())
+							allMoveLst.add( new MoveObj(cellLst[i][j].getRightWall()));
+						}
+						if(!cellLst[i][j-1].getLeftWall().getFixed()){
 							cellLst[i][j-1].getLeftWall().setFixed(true, true);
+							allMoveLst.add( new MoveObj(cellLst[i][j-1].getLeftWall()));
+						}
 					}
 					if(checkBounds(i+1, j) && cellLst[i+1][j].getNodeVal() == 3){
-						if(!cellLst[i][j].getTopWall().getFixed())
+						if(!cellLst[i][j].getTopWall().getFixed()){
 							cellLst[i][j].getTopWall().setFixed(true, true);
-						if(!cellLst[i][j].getBottomWall().getFixed())
+							allMoveLst.add( new MoveObj(cellLst[i][j].getTopWall()));
+						}
+						if(!cellLst[i][j].getBottomWall().getFixed()){
 							cellLst[i][j].getBottomWall().setFixed(true, true);
-						if(!cellLst[i+1][j].getBottomWall().getFixed())
+							allMoveLst.add( new MoveObj(cellLst[i][j].getBottomWall()));
+						}
+						if(!cellLst[i+1][j].getBottomWall().getFixed()){
 							cellLst[i+1][j].getBottomWall().setFixed(true, true);
+							allMoveLst.add( new MoveObj(cellLst[i+1][j].getBottomWall()));
+						}
 					}
 					if(checkBounds(i-1, j) && cellLst[i-1][j].getNodeVal() == 3){
-						if(!cellLst[i][j].getBottomWall().getFixed())
+						if(!cellLst[i][j].getBottomWall().getFixed()){
 							cellLst[i][j].getBottomWall().setFixed(true, true);
-						if(!cellLst[i][j].getTopWall().getFixed())
+							allMoveLst.add( new MoveObj(cellLst[i][j].getBottomWall()));
+						}
+						if(!cellLst[i][j].getTopWall().getFixed()){
 							cellLst[i][j].getTopWall().setFixed(true, true);
-						if(!cellLst[i-1][j].getTopWall().getFixed())
+							allMoveLst.add( new MoveObj(cellLst[i][j].getTopWall()));
+						}
+						if(!cellLst[i-1][j].getTopWall().getFixed()){
 							cellLst[i-1][j].getTopWall().setFixed(true, true);
+							allMoveLst.add( new MoveObj(cellLst[i-1][j].getTopWall()));
+						}
 					}
 				}
 			}
@@ -227,44 +320,76 @@ public class MainSolver {
 			for( j = 0; j < colSize; ++j){
 				if(cellLst[i][j].getNodeVal() == 3){
 					if(checkBounds(i+1, j+1) && cellLst[i+1][j+1].getNodeVal() == 3){
-						if(!cellLst[i+1][j+1].getBottomWall().getFixed())
+						if(!cellLst[i+1][j+1].getBottomWall().getFixed()){
 							cellLst[i+1][j+1].getBottomWall().setFixed(true, true);
-						if(!cellLst[i+1][j+1].getRightWall().getFixed())
+							allMoveLst.add( new MoveObj(cellLst[i+1][j+1].getBottomWall()));
+						}
+						if(!cellLst[i+1][j+1].getRightWall().getFixed()){
 							cellLst[i+1][j+1].getRightWall().setFixed(true, true);
-						if(!cellLst[i][j].getTopWall().getFixed())
+							allMoveLst.add( new MoveObj(cellLst[i+1][j+1].getRightWall()));
+						}
+						if(!cellLst[i][j].getTopWall().getFixed()){
 							cellLst[i][j].getTopWall().setFixed(true, true);
-						if(!cellLst[i][j].getLeftWall().getFixed())
+							allMoveLst.add( new MoveObj(cellLst[i][j].getTopWall()));
+						}
+						if(!cellLst[i][j].getLeftWall().getFixed()){
 							cellLst[i][j].getLeftWall().setFixed(true, true);
+							allMoveLst.add( new MoveObj(cellLst[i][j].getLeftWall()));
+						}
 					}
 					if(checkBounds(i-1, j-1) && cellLst[i-1][j-1].getNodeVal() == 3){
-						if(!cellLst[i-1][j-1].getTopWall().getFixed())
+						if(!cellLst[i-1][j-1].getTopWall().getFixed()){
 							cellLst[i-1][j-1].getTopWall().setFixed(true, true);
-						if(!cellLst[i-1][j-1].getLeftWall().getFixed())
+							allMoveLst.add( new MoveObj(cellLst[i-1][j-1].getTopWall()));
+						}
+						if(!cellLst[i-1][j-1].getLeftWall().getFixed()){
 							cellLst[i-1][j-1].getLeftWall().setFixed(true, true);
-						if(!cellLst[i][j].getBottomWall().getFixed())
+							allMoveLst.add( new MoveObj(cellLst[i-1][j-1].getLeftWall()));
+						}
+						if(!cellLst[i][j].getBottomWall().getFixed()){
 							cellLst[i][j].getBottomWall().setFixed(true, true);
-						if(!cellLst[i][j].getRightWall().getFixed())
+							allMoveLst.add( new MoveObj(cellLst[i][j].getBottomWall()));
+						}
+						if(!cellLst[i][j].getRightWall().getFixed()){
 							cellLst[i][j].getRightWall().setFixed(true, true);
+							allMoveLst.add( new MoveObj(cellLst[i][j].getRightWall()));
+						}
 					}
 					if(checkBounds(i+1, j-1) && cellLst[i+1][j-1].getNodeVal() == 3){
-						if(!cellLst[i+1][j-1].getBottomWall().getFixed())
+						if(!cellLst[i+1][j-1].getBottomWall().getFixed()){
 							cellLst[i+1][j-1].getBottomWall().setFixed(true, true);
-						if(!cellLst[i+1][j-1].getLeftWall().getFixed())
+							allMoveLst.add( new MoveObj(cellLst[i+1][j-1].getBottomWall()));
+						}
+						if(!cellLst[i+1][j-1].getLeftWall().getFixed()){
 							cellLst[i+1][j-1].getLeftWall().setFixed(true, true);
-						if(!cellLst[i][j].getTopWall().getFixed())
+							allMoveLst.add( new MoveObj(cellLst[i+1][j-1].getLeftWall()));
+						}
+						if(!cellLst[i][j].getTopWall().getFixed()){
 							cellLst[i][j].getTopWall().setFixed(true, true);
-						if(!cellLst[i][j].getRightWall().getFixed())
+							allMoveLst.add( new MoveObj(cellLst[i][j].getTopWall()));
+						}
+						if(!cellLst[i][j].getRightWall().getFixed()){
 							cellLst[i][j].getRightWall().setFixed(true, true);
+							allMoveLst.add( new MoveObj(cellLst[i][j].getRightWall()));
+						}
 					}
 					if(checkBounds(i-1, j+1) && cellLst[i-1][j+1].getNodeVal() == 3){
-						if(!cellLst[i-1][j+1].getTopWall().getFixed())
+						if(!cellLst[i-1][j+1].getTopWall().getFixed()){
 							cellLst[i-1][j+1].getTopWall().setFixed(true, true);
-						if(!cellLst[i-1][j+1].getRightWall().getFixed())
+							allMoveLst.add( new MoveObj(cellLst[i-1][j+1].getTopWall()));
+						}
+						if(!cellLst[i-1][j+1].getRightWall().getFixed()){
 							cellLst[i-1][j+1].getRightWall().setFixed(true, true);
-						if(!cellLst[i][j].getBottomWall().getFixed())
+							allMoveLst.add( new MoveObj(cellLst[i-1][j+1].getRightWall()));
+						}
+						if(!cellLst[i][j].getBottomWall().getFixed()){
 							cellLst[i][j].getBottomWall().setFixed(true, true);
-						if(!cellLst[i][j].getLeftWall().getFixed())
+							allMoveLst.add( new MoveObj(cellLst[i][j].getBottomWall()));
+						}
+						if(!cellLst[i][j].getLeftWall().getFixed()){
 							cellLst[i][j].getLeftWall().setFixed(true, true);
+							allMoveLst.add( new MoveObj(cellLst[i][j].getLeftWall()));
+						}
 					}
 				}
 			}
@@ -328,8 +453,10 @@ public class MainSolver {
 			if(backTrack()){
 				System.out.println("Solution Found");
 				System.out.println("BACK TRACK DONE AFTER VISITING LEAVES "+ level + " TIMES");
+				System.out.println("NUMBER OF MOVES "+ allMoveLst.size());
 				Grid.isSolved = true;
 				Grid.cellLst = getCellLstCopy(cellLst);
+				
 			}
 			else{
 				System.out.println("Something is wrong");
@@ -342,11 +469,11 @@ public class MainSolver {
 			for( i = 0; i < rowSize; ++i, System.out.println())
 				for(  j = 0; j < colSize; ++j)
 					System.out.print(ds.findSet(getIndex(i, j)) + " ");
+			
 			for( i = 0; i < rowSize; ++i, System.out.println())
 				for(  j = 0; j < colSize; ++j)
 					System.out.print(cellLst[i][j].getCellColor() + " ");
 		}
-		
 	}
 	
 	/*
@@ -360,83 +487,131 @@ public class MainSolver {
 			case 1:{
 				ds.union(0, getIndex(x, y));
 				if(x == 0 && y == 0){
-					if(!tmpCell.getTopWall().getFixed())
+					if(!tmpCell.getTopWall().getFixed()){
 						tmpCell.getTopWall().setFixed(true, false);
-					if(!tmpCell.getLeftWall().getFixed())
+						allMoveLst.add( new MoveObj( tmpCell.getTopWall()));
+					}
+					if(!tmpCell.getLeftWall().getFixed()){
 						tmpCell.getLeftWall().setFixed(true, false);
+						allMoveLst.add( new MoveObj( tmpCell.getLeftWall()));
+					}
 				}
 				if(x == rowSize-1 && y == 0){
-					if(!tmpCell.getBottomWall().getFixed())
+					if(!tmpCell.getBottomWall().getFixed()){
 						tmpCell.getBottomWall().setFixed(true, false);
-					if(!tmpCell.getLeftWall().getFixed())
+						allMoveLst.add( new MoveObj( tmpCell.getBottomWall()));
+					}
+					if(!tmpCell.getLeftWall().getFixed()){
 						tmpCell.getLeftWall().setFixed(true, false);
+						allMoveLst.add( new MoveObj( tmpCell.getLeftWall()));
+					}
 				}
 				if(x == rowSize-1 && y == colSize-1){
-					if(!tmpCell.getBottomWall().getFixed())
+					if(!tmpCell.getBottomWall().getFixed()){
 						tmpCell.getBottomWall().setFixed(true, false);
-					if(!tmpCell.getRightWall().getFixed())
+						allMoveLst.add( new MoveObj( tmpCell.getBottomWall()));
+					}
+					if(!tmpCell.getRightWall().getFixed()){
 						tmpCell.getRightWall().setFixed(true, false);
+						allMoveLst.add( new MoveObj( tmpCell.getRightWall()));
+					}
 				}
 				if(x == 0 && y == colSize-1){
-					if(!tmpCell.getTopWall().getFixed())
+					if(!tmpCell.getTopWall().getFixed()){
 						tmpCell.getTopWall().setFixed(true, false);
-					if(!tmpCell.getRightWall().getFixed())
+						allMoveLst.add( new MoveObj( tmpCell.getTopWall()));
+					}
+					if(!tmpCell.getRightWall().getFixed()){
 						tmpCell.getRightWall().setFixed(true, false);
+						allMoveLst.add( new MoveObj( tmpCell.getRightWall()));
+					}
 				}
 			}
 			break;
 			case 3:{
 				//ds.union(1, getIndex(x, y));
 				if(x == 0 && y == 0){
-					if(!tmpCell.getTopWall().getFixed())
+					if(!tmpCell.getTopWall().getFixed()){
 						tmpCell.getTopWall().setFixed(true, true);
-					if(!tmpCell.getLeftWall().getFixed())
+						allMoveLst.add( new MoveObj( tmpCell.getTopWall()));
+					}
+					if(!tmpCell.getLeftWall().getFixed()){
 						tmpCell.getLeftWall().setFixed(true, true);
+						allMoveLst.add( new MoveObj( tmpCell.getLeftWall()));
+					}
 				}
 				if(x == rowSize-1 && y == 0){
-					if(!tmpCell.getBottomWall().getFixed())
+					if(!tmpCell.getBottomWall().getFixed()){
 						tmpCell.getBottomWall().setFixed(true, true);
-					if(!tmpCell.getLeftWall().getFixed())
+						allMoveLst.add( new MoveObj( tmpCell.getBottomWall()));
+					}
+					if(!tmpCell.getLeftWall().getFixed()){
 						tmpCell.getLeftWall().setFixed(true, true);
+						allMoveLst.add( new MoveObj( tmpCell.getLeftWall()));
+					}
 				}
 				if(x == rowSize-1 && y == colSize-1){
-					if(!tmpCell.getBottomWall().getFixed())
+					if(!tmpCell.getBottomWall().getFixed()){
 						tmpCell.getBottomWall().setFixed(true, true);
-					if(!tmpCell.getRightWall().getFixed())
+						allMoveLst.add( new MoveObj( tmpCell.getBottomWall()));
+					}
+					if(!tmpCell.getRightWall().getFixed()){
 						tmpCell.getRightWall().setFixed(true, true);
+						allMoveLst.add( new MoveObj( tmpCell.getRightWall()));
+					}
 				}
 				if(x == 0 && y == colSize-1){
-					if(!tmpCell.getTopWall().getFixed())
+					if(!tmpCell.getTopWall().getFixed()){
 						tmpCell.getTopWall().setFixed(true, true);
-					if(!tmpCell.getRightWall().getFixed())
+						allMoveLst.add( new MoveObj( tmpCell.getTopWall()));
+					}
+					if(!tmpCell.getRightWall().getFixed()){
 						tmpCell.getRightWall().setFixed(true, true);
+						allMoveLst.add( new MoveObj( tmpCell.getRightWall()));
+					}
 				}
 			}
 			break;
 			case 2:{
 				if(x == 0 && y == 0){
-					if(!cellLst[1][0].getLeftWall().getFixed())
+					if(!cellLst[1][0].getLeftWall().getFixed()){
 						cellLst[1][0].getLeftWall().setFixed(true, true);
-					if(!cellLst[0][1].getTopWall().getFixed())
+						allMoveLst.add( new MoveObj( cellLst[1][0].getLeftWall()));
+					}
+					if(!cellLst[0][1].getTopWall().getFixed()){
 						cellLst[0][1].getTopWall().setFixed(true, true);
+						allMoveLst.add( new MoveObj( cellLst[0][1].getTopWall()));
+					}
 				}
 				if(x == rowSize-1 && y == 0){
-					if(!cellLst[x-1][0].getLeftWall().getFixed())
+					if(!cellLst[x-1][0].getLeftWall().getFixed()){
 						cellLst[x-1][0].getLeftWall().setFixed(true, true);
-					if(!cellLst[x][1].getBottomWall().getFixed())
+						allMoveLst.add( new MoveObj( cellLst[x-1][0].getLeftWall()));
+					}
+					if(!cellLst[x][1].getBottomWall().getFixed()){
 						cellLst[x][1].getBottomWall().setFixed(true, true);
+						allMoveLst.add( new MoveObj( cellLst[x][1].getBottomWall()));
+					}
 				}
 				if(x == rowSize-1 && y == colSize-1){
-					if(!cellLst[x][y-1].getBottomWall().getFixed())
+					if(!cellLst[x][y-1].getBottomWall().getFixed()){
 						cellLst[x][y-1].getBottomWall().setFixed(true, true);
-					if(!cellLst[x-1][y].getRightWall().getFixed())
+						allMoveLst.add( new MoveObj( cellLst[x][y-1].getBottomWall()));
+					}
+					if(!cellLst[x-1][y].getRightWall().getFixed()){
 						cellLst[x-1][y].getRightWall().setFixed(true, true);
+						allMoveLst.add( new MoveObj( cellLst[x-1][y].getRightWall()));
+					}
 				}
 				if(x == 0 && y == colSize-1){
-					if(!cellLst[x][y-1].getTopWall().getFixed())
+					if(!cellLst[x][y-1].getTopWall().getFixed()){
 						cellLst[x][y-1].getTopWall().setFixed(true, true);
-					if(!cellLst[x+1][y].getRightWall().getFixed())
+						allMoveLst.add( new MoveObj( cellLst[x][y-1].getTopWall()));
+					}
+					if(!cellLst[x+1][y].getRightWall().getFixed()){
 						cellLst[x+1][y].getRightWall().setFixed(true, true);
+						allMoveLst.add( new MoveObj( cellLst[x+1][y].getRightWall()));
+					}
 				}
 			}
 			
@@ -450,16 +625,24 @@ public class MainSolver {
 	private static void colorBorderCells(){
 		int i;
 		for( i = 0 ; i < colSize; ++i){
-			if(cellLst[0][i].getTopWall().getIsActive() && cellLst[0][i].getCellColor() == 0)
+			if(cellLst[0][i].getTopWall().getIsActive() && cellLst[0][i].getCellColor() == 0){
 				cellLst[0][i].setCellColor(2, true);
-			if(cellLst[rowSize-1][i].getBottomWall().getIsActive() && cellLst[rowSize-1][i].getCellColor() == 0)
+				allMoveLst.add( new MoveObj( cellLst[0][i]));
+			}
+			if(cellLst[rowSize-1][i].getBottomWall().getIsActive() && cellLst[rowSize-1][i].getCellColor() == 0){
 				cellLst[rowSize-1][i].setCellColor(2, true);
+				allMoveLst.add( new MoveObj( cellLst[rowSize-1][i]));
+			}
 		}
 		for( i = 0; i < rowSize; ++i){
-			if(cellLst[i][0].getLeftWall().getIsActive() && cellLst[i][0].getCellColor() == 0)
+			if(cellLst[i][0].getLeftWall().getIsActive() && cellLst[i][0].getCellColor() == 0){
 				cellLst[i][0].setCellColor(2, true);
-			if(cellLst[i][colSize-1].getRightWall().getIsActive() && cellLst[i][colSize-1].getCellColor() == 0)
+				allMoveLst.add( new MoveObj( cellLst[i][0]));
+			}
+			if(cellLst[i][colSize-1].getRightWall().getIsActive() && cellLst[i][colSize-1].getCellColor() == 0){
 				cellLst[i][colSize-1].setCellColor(2, true);
+				allMoveLst.add( new MoveObj( cellLst[i][colSize-1]));
+			}
 		}
 	}
 	
@@ -474,20 +657,24 @@ public class MainSolver {
 		for( i = 0 ; i < colSize; ++i){
 			if(cellLst[0][i].getCellColor() > 1 && !cellLst[0][i].getTopWall().getFixed()){
 				cellLst[0][i].getTopWall().setFixed(true, true);
+				allMoveLst.add( new MoveObj( cellLst[0][i].getTopWall()));
 				to_ret = true;
 			}
 			if(cellLst[rowSize-1][i].getCellColor() > 1 && !cellLst[rowSize-1][i].getBottomWall().getFixed()){
 				cellLst[rowSize-1][i].getBottomWall().setFixed(true, true);
+				allMoveLst.add( new MoveObj( cellLst[rowSize-1][i].getBottomWall()));
 				to_ret = true;
 			}
 		}
 		for( i = 0; i < rowSize; ++i){
 			if(cellLst[i][0].getCellColor() > 1 && !cellLst[i][0].getLeftWall().getFixed()){
 				cellLst[i][0].getLeftWall().setFixed(true, true);
+				allMoveLst.add( new MoveObj( cellLst[i][0].getLeftWall()));
 				to_ret = true;
 			}
 			if(cellLst[i][colSize-1].getCellColor() > 1 && !cellLst[i][colSize-1].getRightWall().getFixed()){
 				cellLst[i][colSize-1].getRightWall().setFixed(true, true);
+				allMoveLst.add( new MoveObj( cellLst[i][colSize-1].getRightWall()));
 				to_ret = true;
 			}
 		}
@@ -508,18 +695,22 @@ public class MainSolver {
 					color = tmpCell.getCellColor() != 1 ? 1 : 2;
 					if(checkBounds(i-1, j) && tmpCell.getTopWall().getIsActive() && cellLst[i-1][j].getCellColor() == 0 && ds.findSet(getIndex(i, j)) != ds.findSet(getIndex(i-1, j))){
 						cellLst[i-1][j].setCellColor(color, true);
+						allMoveLst.add( new MoveObj(cellLst[i-1][j]));
 						to_ret = true;
 					}
 					if(checkBounds(i+1, j) && tmpCell.getBottomWall().getIsActive() && cellLst[i+1][j].getCellColor() == 0 && ds.findSet(getIndex(i, j)) != ds.findSet(getIndex(i+1, j))){
 						cellLst[i+1][j].setCellColor(color, true);
+						allMoveLst.add( new MoveObj(cellLst[i+1][j]));
 						to_ret = true;
 					}
 					if(checkBounds(i, j+1) && tmpCell.getRightWall().getIsActive() && cellLst[i][j+1].getCellColor() == 0 && ds.findSet(getIndex(i, j)) != ds.findSet(getIndex(i, j+1))){
 						cellLst[i][j+1].setCellColor(color, true);
+						allMoveLst.add( new MoveObj(cellLst[i][j+1]));
 						to_ret = true;
 					}
 					if(checkBounds(i, j-1) && tmpCell.getLeftWall().getIsActive() && cellLst[i][j-1].getCellColor() == 0 && ds.findSet(getIndex(i, j)) != ds.findSet(getIndex(i, j-1))){
 						cellLst[i][j-1].setCellColor(color, true);
+						allMoveLst.add( new MoveObj(cellLst[i][j-1]));
 						to_ret = true;
 					}
 				}
@@ -535,26 +726,38 @@ public class MainSolver {
 	private static boolean drawLineColorSep(){
 		int i, j, color;
 		Cell tmpCell;
-		boolean to_ret = false;
+		boolean to_ret = false, tmp;
 		for( i = 0; i < rowSize; ++i){
 			for( j = 0; j < colSize; ++j ){
 				tmpCell = cellLst[i][j];
 				color = tmpCell.getCellColor();
 				if( color != 0){
 					if(checkBounds(i-1, j) && cellLst[i-1][j].getCellColor() != 0 && !tmpCell.getTopWall().getFixed() ){
-						tmpCell.getTopWall().setFixed(true, cellLst[i-1][j].getCellColor() != color );
+						tmp = cellLst[i-1][j].getCellColor() != color;
+						tmpCell.getTopWall().setFixed(true, tmp);
+						if(tmp)
+							allMoveLst.add( new MoveObj(cellLst[i-1][j].getTopWall()));
 						to_ret = true;
 					}
 					if(checkBounds(i+1, j) && cellLst[i+1][j].getCellColor() != 0 && !tmpCell.getBottomWall().getFixed()){
-						tmpCell.getBottomWall().setFixed(true, cellLst[i+1][j].getCellColor() != color );
+						tmp = cellLst[i+1][j].getCellColor() != color;
+						tmpCell.getBottomWall().setFixed(true, tmp);
+						if(tmp)
+							allMoveLst.add( new MoveObj(cellLst[i+1][j].getBottomWall()));
 						to_ret = true;
 					}
 					if(checkBounds(i, j-1) && cellLst[i][j-1].getCellColor() != 0 && !tmpCell.getLeftWall().getFixed()){
-						tmpCell.getLeftWall().setFixed(true, cellLst[i][j-1].getCellColor() != color);
+						tmp = cellLst[i][j-1].getCellColor() != color;
+						tmpCell.getLeftWall().setFixed(true, tmp);
+						if(tmp)
+							allMoveLst.add( new MoveObj(cellLst[i][j-1].getLeftWall()));
 						to_ret = true;
 					}
 					if(checkBounds(i, j+1) && cellLst[i][j+1].getCellColor() != 0 && !tmpCell.getRightWall().getFixed()){
-						tmpCell.getRightWall().setFixed(true, cellLst[i][j+1].getCellColor() != color );
+						tmp = cellLst[i][j+1].getCellColor() != color;
+						tmpCell.getRightWall().setFixed(true, tmp);
+						if(tmp)
+							allMoveLst.add( new MoveObj(cellLst[i][j+1].getRightWall()));
 						to_ret = true;
 					}
 				}
@@ -572,38 +775,66 @@ public class MainSolver {
 		for( i = 0; i < colSize; ++i){
 			if(cellLst[0][i].getNodeVal() == 0 && cellLst[0][i].getCellColor() == 0){
 				cellLst[0][i].setCellColor(1, true);
-				cellLst[1][i].setCellColor(1, true);
-				if(checkBounds(0, i+1) && cellLst[0][i+1].getCellColor() == 0)
+				if(cellLst[1][i].getCellColor() == 0){
+					cellLst[1][i].setCellColor(1, true);
+					allMoveLst.add( new MoveObj(cellLst[1][i]));
+				}	
+				if(checkBounds(0, i+1) && cellLst[0][i+1].getCellColor() == 0){
 					cellLst[0][i+1].setCellColor(1, true);
-				if(checkBounds(0, i-1) && cellLst[0][i-1].getCellColor() == 0)
+					allMoveLst.add( new MoveObj(cellLst[0][i+1]));
+				}
+				if(checkBounds(0, i-1) && cellLst[0][i-1].getCellColor() == 0){
 					cellLst[0][i-1].setCellColor(1, true);
+					allMoveLst.add( new MoveObj(cellLst[0][i-1]));
+				}
 			}
 			if(cellLst[rowSize-1][i].getNodeVal() == 0 && cellLst[rowSize-1][i].getCellColor() == 0){
 				cellLst[rowSize-1][i].setCellColor(1, true);
-				cellLst[rowSize-2][i].setCellColor(1, true);
-				if(checkBounds(rowSize-1, i-1) && cellLst[rowSize-1][i-1].getCellColor() == 0)
+				if(cellLst[rowSize-2][i].getCellColor() == 0){
+					cellLst[rowSize-2][i].setCellColor(1, true);
+					allMoveLst.add( new MoveObj(cellLst[rowSize-2][i]));
+				}
+				if(checkBounds(rowSize-1, i-1) && cellLst[rowSize-1][i-1].getCellColor() == 0){
 					cellLst[rowSize-1][i-1].setCellColor(1, true);
-				if(checkBounds(rowSize-1, i+1) && cellLst[rowSize-1][i+1].getCellColor() == 0)
+					allMoveLst.add( new MoveObj(cellLst[rowSize-1][i-1]));
+				}
+				if(checkBounds(rowSize-1, i+1) && cellLst[rowSize-1][i+1].getCellColor() == 0){
 					cellLst[rowSize-1][i+1].setCellColor(1, true);
+					allMoveLst.add( new MoveObj(cellLst[rowSize-1][i+1]));
+				}
 			}
 		}
 		
 		for( i = 1; i < rowSize-1; ++i){
 			if(cellLst[i][0].getNodeVal() == 0 && cellLst[i][0].getCellColor() == 0){
 				cellLst[i][0].setCellColor(1, true);
-				cellLst[i][1].setCellColor(1, true);
-				if(checkBounds(i+1, 0) && cellLst[i+1][0].getCellColor() == 0)
+				if(cellLst[i][1].getCellColor() == 0){
+					cellLst[i][1].setCellColor(1, true);
+					allMoveLst.add( new MoveObj(cellLst[i][1]));
+				}
+				if(checkBounds(i+1, 0) && cellLst[i+1][0].getCellColor() == 0){
 					cellLst[i+1][0].setCellColor(1);
-				if(checkBounds(i-1, 0) && cellLst[i-1][0].getCellColor() == 0)
+					allMoveLst.add( new MoveObj(cellLst[i+1][0]));
+				}
+				if(checkBounds(i-1, 0) && cellLst[i-1][0].getCellColor() == 0){
 					cellLst[i-1][0].setCellColor(1);
+					allMoveLst.add( new MoveObj(cellLst[i-1][0]));
+				}
 			}
 			if(cellLst[i][colSize-1].getNodeVal() == 0 && cellLst[i][colSize-1].getCellColor() == 0){
 				cellLst[i][colSize-1].setCellColor(1, true);
-				cellLst[i][colSize-2].setCellColor(1, true);
-				if(checkBounds(i-1, colSize-1) && cellLst[i-1][colSize-1].getCellColor() == 0)
+				if(cellLst[i][colSize-2].getCellColor() == 0){
+					cellLst[i][colSize-2].setCellColor(1, true);
+					allMoveLst.add( new MoveObj(cellLst[i][colSize-2]));
+				}
+				if(checkBounds(i-1, colSize-1) && cellLst[i-1][colSize-1].getCellColor() == 0){
 					cellLst[i-1][colSize-1].setCellColor(1);
-				if(checkBounds(i+1, colSize-1) && cellLst[i+1][colSize-1].getCellColor() == 0)
+					allMoveLst.add( new MoveObj(cellLst[i-1][colSize-1]));
+				}
+				if(checkBounds(i+1, colSize-1) && cellLst[i+1][colSize-1].getCellColor() == 0){
 					cellLst[i+1][colSize-1].setCellColor(1);
+					allMoveLst.add( new MoveObj(cellLst[i+1][colSize-1]));
+				}
 			}
 		}
 		colorLineSep();
@@ -634,12 +865,14 @@ public class MainSolver {
 					if(Color1.size() == 2){
 						for( Cell k : notColored){
 							k.setCellColor(2, true);
+							allMoveLst.add( new MoveObj(k));
 							to_ret = true;
 						}
 					}
 					else if(Color2.size() == 2){
 						for( Cell k : notColored){
 							k.setCellColor(1, true);
+							allMoveLst.add( new MoveObj(k));
 							to_ret = true;
 						}
 					}
@@ -703,10 +936,12 @@ public class MainSolver {
 					if(color == 0 ){
 						if(Color1.size() > 1){
 							tmpCell.setCellColor(1, true);
+							allMoveLst.add( new MoveObj(tmpCell));
 							to_ret = true;
 						}
 						else if(Color2.size() > 1){
 							tmpCell.setCellColor(2, true);
+							allMoveLst.add( new MoveObj(tmpCell));
 							to_ret = true;
 						}
 						color = tmpCell.getCellColor();
@@ -715,12 +950,14 @@ public class MainSolver {
 						if(Color2.size() > 0){
 							for( Cell k : notColored){
 								k.setCellColor(1, true);
+								allMoveLst.add( new MoveObj(k));
 								to_ret = true;
 							}
 						}	
 						else if(Color1.size() == 3){
 							for( Cell k : notColored){
 								k.setCellColor(2, true);
+								allMoveLst.add( new MoveObj(k));
 								to_ret = true;
 							}
 						}
@@ -729,12 +966,14 @@ public class MainSolver {
 						if(Color1.size() > 0){
 							for( Cell k : notColored){
 								k.setCellColor(2, true);
+								allMoveLst.add( new MoveObj(k));
 								to_ret = true;
 							}
 						}
 						else if(Color2.size() == 3){
 							for( Cell k : notColored){
 								k.setCellColor(1, true);
+								allMoveLst.add( new MoveObj(k));
 								to_ret = true;
 							}
 						}
@@ -799,10 +1038,12 @@ public class MainSolver {
 					if(color == 0 ){
 						if(Color1.size() > 1){
 							tmpCell.setCellColor(2, true);
+							allMoveLst.add( new MoveObj(tmpCell));
 							to_ret = true;
 						}
 						else if(Color2.size() > 1){
 							tmpCell.setCellColor(1, true);
+							allMoveLst.add( new MoveObj(tmpCell));
 							to_ret = true;
 						}
 						color = tmpCell.getCellColor();
@@ -811,12 +1052,14 @@ public class MainSolver {
 						if(Color1.size() > 0){
 							for( Cell k : notColored){
 								k.setCellColor(2, true);
+								allMoveLst.add( new MoveObj(k));
 								to_ret = true;
 							}
 						}
 						else if(Color2.size() == 3)
 							for( Cell k : notColored){
 								k.setCellColor(1, true);
+								allMoveLst.add( new MoveObj(k));
 								to_ret = true;
 							}
 					}
@@ -824,12 +1067,14 @@ public class MainSolver {
 						if(Color2.size() > 0){
 							for( Cell k : notColored){
 								k.setCellColor(1, true);
+								allMoveLst.add( new MoveObj(k));
 								to_ret = true;
 							}
 						}
 						else if(Color1.size() == 3)
 							for( Cell k : notColored){
 								k.setCellColor(2, true);
+								allMoveLst.add( new MoveObj(k));
 								to_ret = true;
 							}
 					}
@@ -928,12 +1173,14 @@ public class MainSolver {
 		if(color != 0){
 			if(cellLst[i][j].getCellColor() == 0){
 				cellLst[i][j].setCellColor(color == 1 ? 2 : 1, true);
+				allMoveLst.add( new MoveObj(cellLst[i][j]));
 				to_ret = true;
 			}
 		}
 		else{
 			if(cellLst[i][j].getCellColor() != 0){
 				tmpCell.setCellColor(cellLst[i][j].getCellColor() == 1 ? 2 : 1, true);
+				allMoveLst.add( new MoveObj(tmpCell));
 				to_ret = true;
 			}
 		}
@@ -1020,14 +1267,20 @@ public class MainSolver {
 						if(Color1.size() > 0){
 							to_ret = true;
 							tmpCell.setCellColor(1, true);
-							for( Cell k : notColored)
+							allMoveLst.add( new MoveObj(tmpCell));
+							for( Cell k : notColored){
 								k.setCellColor(1, true);
+								allMoveLst.add( new MoveObj(k));
+							}
 						}
 						else if( Color2.size() > 0){
 							to_ret = true;
 							tmpCell.setCellColor(2, true);
-							for( Cell k : notColored)
+							allMoveLst.add( new MoveObj(tmpCell));
+							for( Cell k : notColored){
 								k.setCellColor(2, true);
+								allMoveLst.add( new MoveObj(k));
+							}
 						}
 					}
 				}
@@ -1045,6 +1298,7 @@ public class MainSolver {
 	private static boolean zeroSubFunction(int i, int j, int color){
 		if(checkBounds(i, j) && cellLst[i][j].getCellColor() == 0){
 			cellLst[i][j].setCellColor(color, true);
+			allMoveLst.add( new MoveObj(cellLst[i][j]));
 			return true;
 		}
 		return false;
@@ -1091,18 +1345,22 @@ public class MainSolver {
 				if(color == 0){
 					if(ds.findSet(getIndex(i+1, j)) == parent && !(checkBounds(i+1, j) && cellLst[i+1][j].getCellColor() == 0)){
 						tmpCell.setCellColor(checkBounds(i+1, j) ? cellLst[i+1][j].getCellColor() : 1, true);
+						allMoveLst.add( new MoveObj(tmpCell));
 						to_ret = true;
 					}
 					else if(ds.findSet(getIndex(i-1, j)) == parent  && !(checkBounds(i-1, j) && cellLst[i-1][j].getCellColor() == 0)){
 						tmpCell.setCellColor(checkBounds(i-1, j) ? cellLst[i-1][j].getCellColor() : 1, true);
+						allMoveLst.add( new MoveObj(tmpCell));
 						to_ret = true;
 					}
 					else if(ds.findSet(getIndex(i, j+1)) == parent && !(checkBounds(i, j+1) && cellLst[i][j+1].getCellColor() == 0)){
 						tmpCell.setCellColor(checkBounds(i, j+1) ? cellLst[i][j+1].getCellColor() : 1, true);
+						allMoveLst.add( new MoveObj(tmpCell));
 						to_ret = true;
 					}
 					else if(ds.findSet(getIndex(i, j-1)) == parent && !(checkBounds(i, j-1) && cellLst[i][j-1].getCellColor() == 0)){
 						tmpCell.setCellColor(checkBounds(i, j-1) ? cellLst[i][j-1].getCellColor() : 1, true);
+						allMoveLst.add( new MoveObj(tmpCell));
 						to_ret = true;
 					}
 				}
@@ -1111,18 +1369,22 @@ public class MainSolver {
 				if(color != 0){
 					if(checkBounds(i+1, j) && ds.findSet(getIndex(i+1, j)) == parent && cellLst[i+1][j].getCellColor() == 0){
 						cellLst[i+1][j].setCellColor(color, true);
+						allMoveLst.add( new MoveObj(cellLst[i+1][j]));
 						to_ret = true;
 					}
 					if(checkBounds(i-1, j) && ds.findSet(getIndex(i-1, j)) == parent && cellLst[i-1][j].getCellColor() == 0){
 						cellLst[i-1][j].setCellColor(color, true);
+						allMoveLst.add( new MoveObj(cellLst[i-1][j]));
 						to_ret = true;
 					}
 					if(checkBounds(i, j+1) && ds.findSet(getIndex(i, j+1)) == parent && cellLst[i][j+1].getCellColor() == 0){
 						cellLst[i][j+1].setCellColor(color, true);
+						allMoveLst.add( new MoveObj(cellLst[i][j+1]));
 						to_ret = true;
 					}
 					if(checkBounds(i, j-1) && ds.findSet(getIndex(i, j-1)) == parent && cellLst[i][j-1].getCellColor() == 0){
 						cellLst[i][j-1].setCellColor(color, true);
+						allMoveLst.add( new MoveObj(cellLst[i][j-1]));
 						to_ret = true;
 					}
 				}
@@ -1270,11 +1532,13 @@ public class MainSolver {
 		Cell[][] cellcopy = getCellLstCopy(cellLst);
 		DisjointSet dscopy = ds.getCopy();
 		cellLst[emptyCellCoordinate.getX()][emptyCellCoordinate.getY()].setCellColor(1, true);
+		allMoveLst.add( new MoveObj(cellLst[emptyCellCoordinate.getX()][emptyCellCoordinate.getY()]));
 		if(backTrack())
 			return true;
 		ds = dscopy.getCopy();
 		cellLst = getCellLstCopy(cellcopy);
 		cellLst[emptyCellCoordinate.getX()][emptyCellCoordinate.getY()].setCellColor(2, true);
+		allMoveLst.add( new MoveObj(cellLst[emptyCellCoordinate.getX()][emptyCellCoordinate.getY()]));
 		return backTrack();
 	}
 	

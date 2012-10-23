@@ -1,5 +1,8 @@
 package datastructure;
 
+import gui.MoveObj;
+
+import java.util.ArrayList;
 import java.util.Vector;
 public class Grid {
 	
@@ -8,6 +11,7 @@ public class Grid {
 	public static boolean isSolved;
 	public static Cell[][] cellLst;
 	public static DisjointSet ds;
+	public static ArrayList<MoveObj> allMoveLst;
 
 	/*
 	 * Setter Methods
@@ -68,6 +72,7 @@ public class Grid {
 			for( j = 0; j < noColumns; ++j)
 				cellLst[i][j] = new Cell(inpCellVal[i][j], new Coordinate(i, j));
 		ds = new DisjointSet(noColumns*noRows);
+		allMoveLst = new ArrayList<MoveObj>();
 		isSolved = false;
 	}
 }
