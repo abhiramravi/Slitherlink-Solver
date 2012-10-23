@@ -1,6 +1,5 @@
 package datastructure;
 
-import gui.MoveObj;
 
 import java.util.ArrayList;
 import java.util.Vector;

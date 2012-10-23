@@ -1,6 +1,5 @@
 package backend;
 
-import gui.MoveObj;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -10,6 +9,7 @@ import datastructure.Cell;
 import datastructure.Coordinate;
 import datastructure.DisjointSet;
 import datastructure.Grid;
+import datastructure.MoveObj;
 import datastructure.Wall;
 
 public class MainSolver {
