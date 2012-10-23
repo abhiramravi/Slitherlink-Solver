@@ -1260,7 +1260,7 @@ public class MainSolver {
 			if(isGameOver())
 				return true;
 		}
-		Coordinate emptyCellCoordinate = getFirstNonColored();
+		Coordinate emptyCellCoordinate = getFirstNonColored3();
 		if(emptyCellCoordinate == null){
 			++level;
 			if(level%1000 == 0)
@@ -1278,6 +1278,10 @@ public class MainSolver {
 		return backTrack();
 	}
 	
+	/*
+	 * Max Adjacent Cells Coloured
+	 */
+	/*
 	private static Coordinate getFirstNonColored1(){
 		int i, j, count = -1, tmp;
 		Coordinate pos = null;
@@ -1293,7 +1297,11 @@ public class MainSolver {
 			}
 		return pos;
 	}
-	
+	*/
+	/*
+	 * Naive First Non Coloured Cell Selection
+	 */
+	/*
 	private static Coordinate getFirstNonColored2(){
 		int i, j;
 		for( i = 0; i < rowSize; ++i)
@@ -1302,8 +1310,12 @@ public class MainSolver {
 					return cellLst[i][j].getPosition();
 		return null;
 	}
+	*/
 	
-	private static Coordinate getFirstNonColored(){
+	/*
+	 * Max Node Val
+	 */
+	private static Coordinate getFirstNonColored3(){
 		int i, j, value = -2;
 		Coordinate pos = null;
 		for( i = 0; i < rowSize; ++i)
@@ -1315,4 +1327,51 @@ public class MainSolver {
 			}
 		return pos;
 	}
+	
+	/*
+	 * Max Active Walls
+	 */
+	/*
+	private static Coordinate getFirstNonColored4(){
+		int i, j, value = -1;
+		Coordinate pos = null;
+		for( i = 0; i < rowSize; ++i)
+			for( j = 0; j < colSize; ++j){
+				if(cellLst[i][j].getCellColor() == 0 && cellLst[i][j].getActiveWalls() > value){
+					pos = cellLst[i][j].getPosition();
+					value = cellLst[i][j].getActiveWalls();
+				}
+			}
+		return pos;
+	}
+	*/
+	
+	/*
+	 * Heuristic FIRST + THIRD
+	 */
+	/*
+	private static Coordinate getFirstNonColored5(){
+		int i, j, value = -2, count = -1, tmp;
+		Coordinate pos = null;
+		for( i = 0; i < rowSize; ++i)
+			for( j = 0; j < colSize; ++j){
+				if(cellLst[i][j].getCellColor() == 0 && cellLst[i][j].getNodeVal() >= value){
+					tmp = cellLst[i][j].noAdjColored(cellLst) ; 
+					if(value == cellLst[i][j].getNodeVal()){
+						if( tmp > count){
+							pos = cellLst[i][j].getPosition();
+							value = cellLst[i][j].getNodeVal();
+							count = tmp;
+						}
+					}
+					else{
+						pos = cellLst[i][j].getPosition();
+						value = cellLst[i][j].getNodeVal();
+						count = tmp;
+					}
+				}
+			}
+		return pos;
+	}
+	*/
 }
