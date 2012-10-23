@@ -1,10 +1,8 @@
 package gui;
 
 import java.awt.BorderLayout;
-import java.awt.Button;
 import java.awt.Color;
 import java.awt.Container;
-import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
@@ -14,7 +12,6 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.util.Arrays;
 import java.util.StringTokenizer;
 import java.util.Vector;
 
@@ -33,9 +30,9 @@ import javax.swing.KeyStroke;
 import javax.swing.border.Border;
 
 import backend.MainSolver;
-
 import datastructure.Coordinate;
 import datastructure.Grid;
+import datastructure.MoveObj;
 import datastructure.Wall;
 
 public class SlitherLinkBoard extends JFrame
@@ -84,7 +81,7 @@ public class SlitherLinkBoard extends JFrame
 	public SlitherLinkBoard() throws Exception
 	{
 		c = getContentPane();
-		setBounds(400, 100, 1000, 1000);
+		setBounds(400, 100, 600, 600);
 		setBackground(new Color(204, 204, 204));
 		setDefaultCloseOperation(EXIT_ON_CLOSE);
 		setTitle("SlitherLink Solver");
@@ -220,12 +217,42 @@ public class SlitherLinkBoard extends JFrame
 				}
 				System.out.println();
 			}
-			
+			/* The Main part of the computation */
+			/*
 			MainSolver.basicSolver();
 			printWalls();
 			colorCells();
+			*/
+			/* The Main part of the computation ends */
+			Thread t = new Thread(r);
+			t.start();
+			
 		}
 		
+	}
+	Runnable r = new Runnable()
+	{
+		
+		@Override
+		public void run()
+		{
+			MainSolver.basicSolver();
+			for(MoveObj m : Grid.allMoveLst)
+			{
+				simulateMove(m);
+				try
+				{
+					Thread.sleep(1000);
+				} catch (InterruptedException e)
+				{
+					e.printStackTrace();
+				}
+			}
+		}
+	};
+	public void simulateMove(MoveObj m)
+	{
+			
 	}
 	class newgame implements ActionListener
 	{
@@ -257,7 +284,7 @@ public class SlitherLinkBoard extends JFrame
 				/* Creating the new GUI */
 				c.removeAll();
 				c = getContentPane();
-				setBounds(400, 100, 1000, 1000);
+				setBounds(400, 100, 600, 600);
 				setBackground(new Color(204, 204, 204));
 				setDefaultCloseOperation(EXIT_ON_CLOSE);
 				setTitle("SlitherLink Solver");
@@ -322,7 +349,15 @@ public class SlitherLinkBoard extends JFrame
 		menuItem = new JMenuItem("Exit", KeyEvent.VK_T);
 		menuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_1,
 				ActionEvent.ALT_MASK));
-		// menuItem.addActionListener(ex);
+	    menuItem.addActionListener(new ActionListener()
+		{
+			
+			@Override
+			public void actionPerformed(ActionEvent arg0)
+			{
+				System.exit(1);
+			}
+		});
 		menu.add(menuItem);
 
 		// putting about in the menu bar.
