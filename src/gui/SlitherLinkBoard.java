@@ -30,6 +30,7 @@ import javax.swing.KeyStroke;
 import javax.swing.border.Border;
 
 import backend.MainSolver;
+import datastructure.Cell;
 import datastructure.Coordinate;
 import datastructure.Grid;
 import datastructure.MoveObj;
@@ -87,7 +88,6 @@ public class SlitherLinkBoard extends JFrame
 		setTitle("SlitherLink Solver");
 		setResizable(true);
 		c.setLayout(null);
-		
 
 		drawMenu();
 
@@ -126,7 +126,7 @@ public class SlitherLinkBoard extends JFrame
 				j[y][x].setHorizontalAlignment(JLabel.CENTER);
 				pnlCells[y][x].add(j[y][x], BorderLayout.CENTER);
 				pnlMain.add(pnlCells[y][x]);
-				//j[y][x].setBackground(Color.ORANGE);
+				// j[y][x].setBackground(Color.ORANGE);
 				pnlCells[y][x].setBackground(new Color(255, 255, 255));
 				pnlCells[y][x].setBorder(defaultBorder);
 			}
@@ -182,62 +182,63 @@ public class SlitherLinkBoard extends JFrame
 			}
 		}
 	}
+
 	Solver solver = new Solver();
-	
+
 	class Solver implements ActionListener
 	{
 
 		@Override
 		public void actionPerformed(ActionEvent arg0)
 		{
-			//TODO
+			// TODO
 			input = new int[gridRows][gridCols];
-			for(int i = 0; i < gridRows; i++)
+			for (int i = 0; i < gridRows; i++)
 			{
-				for(int k = 0; k < gridCols; k++)
+				for (int k = 0; k < gridCols; k++)
 				{
-					if(!j[i][k].getText().equals(""))
+					if (!j[i][k].getText().equals(""))
 					{
 						input[i][k] = Integer.parseInt(j[i][k].getText());
-					}
-					else
+					} else
 					{
 						input[i][k] = -1;
 					}
-					
+
 				}
 			}
 			Grid.updateCellList(gridRows, gridCols, input);
-			
-			for(int i = 0; i < gridRows; i++)
+
+			for (int i = 0; i < gridRows; i++)
 			{
-				for(int k = 0; k < gridCols; k++)
+				for (int k = 0; k < gridCols; k++)
 				{
 					System.out.print(input[i][k] + " ");
 				}
 				System.out.println();
 			}
 			/* The Main part of the computation */
-			/*
-			MainSolver.basicSolver();
-			printWalls();
-			colorCells();
-			*/
+			
+			 //MainSolver.basicSolver(); printWalls(); colorCells();
+			 
 			/* The Main part of the computation ends */
+			
+			colors = new int[gridRows][gridCols][4];
 			Thread t = new Thread(r);
 			t.start();
-			
+
 		}
-		
+
 	}
+
 	Runnable r = new Runnable()
 	{
-		
+
 		@Override
 		public void run()
 		{
 			MainSolver.basicSolver();
-			for(MoveObj m : Grid.allMoveLst)
+			for (MoveObj m : Grid.allMoveLst)
 			{
 				simulateMove(m);
 				try
@@ -250,10 +251,110 @@ public class SlitherLinkBoard extends JFrame
 			}
 		}
 	};
+
 	public void simulateMove(MoveObj m)
 	{
-			
+		if (m.getisWallMove())
+		{
+			wallMove(m);
+		} else
+		{
+			cellColorMove(m);
+		}
 	}
+	public void cellColorMove(MoveObj m)
+	{
+		Cell c = m.getCellMove();
+		int i = c.getPosition().getX();
+		int k = c.getPosition().getY();
+		if (c.getCellColor() == 1)
+		{
+			j[i][k].setBackground(Color.ORANGE);
+		}
+		if (c.getCellColor() == 2)
+		{
+			j[i][k].setBackground(Color.YELLOW);
+		}
+		if(c.getCellColor() != 1 && c.getCellColor() != 2)
+		{
+			j[i][k].setBackground(Color.LIGHT_GRAY);
+		}
+		
+		
+	}
+	public void wallMove(MoveObj m)
+	{
+		Wall w = m.getWallMove();
+		if (w.getIsActive())
+		{
+			Coordinate c = w.getWallStart();
+			System.out.println("Activate X = " + c.getX() + "; Y = " + c.getY());
+			if (w.getHorzn())
+			{
+				if (c.getX() < gridRows)
+				{
+					colors[c.getX()][c.getY()][0] = stroke;
+					pnlCells[c.getX()][c.getY()]
+							.setBorder(getActiveBorder(colors[c.getX()][c
+									.getY()]));
+				} else
+				{
+					colors[c.getX() - 1][c.getY()][2] = stroke;
+					pnlCells[c.getX() - 1][c.getY()]
+							.setBorder(getActiveBorder(colors[c.getX() - 1][c
+									.getY()]));
+				}
+			} else
+			{
+				if (c.getY() < gridCols)
+				{
+					colors[c.getX()][c.getY()][1] = stroke;
+					pnlCells[c.getX()][c.getY()]
+							.setBorder(getActiveBorder(colors[c.getX()][c
+									.getY()]));
+				} else
+				{
+					colors[c.getX()][c.getY() - 1][3] = stroke;
+					pnlCells[c.getX()][c.getY() - 1]
+							.setBorder(getActiveBorder(colors[c.getX()][c
+									.getY() - 1]));
+				}
+			}
+		}
+		else
+		{
+			Coordinate c = w.getWallStart();
+			System.out.println("Deactivate X = " + c.getX() + "; Y = " + c.getY());
+			if (w.getHorzn())
+			{
+				if (c.getX() < gridRows)
+				{
+					colors[c.getX()][c.getY()][0] = 0;
+					pnlCells[c.getX()][c.getY()]
+							.setBorder(defaultBorder);
+				} else
+				{
+					colors[c.getX() - 1][c.getY()][2] = 0;
+					pnlCells[c.getX() - 1][c.getY()]
+							.setBorder(defaultBorder);
+				}
+			} else
+			{
+				if (c.getY() < gridCols)
+				{
+					colors[c.getX()][c.getY()][1] = 0;
+					pnlCells[c.getX()][c.getY()]
+							.setBorder(defaultBorder);
+				} else
+				{
+					colors[c.getX()][c.getY() - 1][3] = 0;
+					pnlCells[c.getX()][c.getY() - 1]
+							.setBorder(defaultBorder);
+				}
+			}
+		}
+	}
+
 	class newgame implements ActionListener
 	{
 
@@ -272,14 +373,14 @@ public class SlitherLinkBoard extends JFrame
 					JOptionPane.showMessageDialog(null, "Invalid Dimensions");
 				gridRows = x;
 				gridCols = y;
-				
+
 				/* Updating the cell List for the backend */
-				//TODO
-				//Grid.updateCellList(gridRows, gridCols, input);
-				
+				// TODO
+				// Grid.updateCellList(gridRows, gridCols, input);
+
 				/* Resolving backend BasicSolver */
-				//TODO
-				//MainSolver.basicSolver();
+				// TODO
+				// MainSolver.basicSolver();
 
 				/* Creating the new GUI */
 				c.removeAll();
@@ -298,11 +399,11 @@ public class SlitherLinkBoard extends JFrame
 				pnlMain.setBounds(3, 3, 500, 500);
 				pnlMain.setBackground(new Color(255, 255, 255));
 				c.add(pnlMain);
-				
+
 				drawMenu();
 				drawBoard();
-				//printWalls();
-				//colorCells();
+				// printWalls();
+				// colorCells();
 
 				show();
 
@@ -314,7 +415,7 @@ public class SlitherLinkBoard extends JFrame
 		}
 
 	}
-	
+
 	public void drawMenu()
 	{
 		JMenuBar menuBar;
@@ -341,7 +442,7 @@ public class SlitherLinkBoard extends JFrame
 		menuItem = new JMenuItem("Solve!", KeyEvent.VK_T);
 		menuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_1,
 				ActionEvent.ALT_MASK));
-	    menuItem.addActionListener(solver);
+		menuItem.addActionListener(solver);
 		menuItem.getAccessibleContext().setAccessibleDescription(
 				"This solves the game");
 		menu.add(menuItem);
@@ -349,9 +450,9 @@ public class SlitherLinkBoard extends JFrame
 		menuItem = new JMenuItem("Exit", KeyEvent.VK_T);
 		menuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_1,
 				ActionEvent.ALT_MASK));
-	    menuItem.addActionListener(new ActionListener()
+		menuItem.addActionListener(new ActionListener()
 		{
-			
+
 			@Override
 			public void actionPerformed(ActionEvent arg0)
 			{
