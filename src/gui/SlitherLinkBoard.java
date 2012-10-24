@@ -77,6 +77,11 @@ public class SlitherLinkBoard extends JFrame
 		return BorderFactory.createMatteBorder(a[0], a[1], a[2], a[3],
 				Color.BLACK);
 	}
+	private Border getDeActiveBorder(int[] a)
+	{
+		return BorderFactory.createMatteBorder(a[0], a[1], a[2], a[3],
+				Color.LIGHT_GRAY);
+	}
 
 	/* The Main constructor */
 	public SlitherLinkBoard() throws Exception
@@ -200,7 +205,7 @@ public class SlitherLinkBoard extends JFrame
 				{
 					if (!j[i][k].getText().equals(""))
 					{
-						input[i][k] = Integer.parseInt(j[i][k].getText());
+						input[i][k] = Integer.parseInt(j[i][k].getText().trim());
 					} else
 					{
 						input[i][k] = -1;
@@ -287,7 +292,7 @@ public class SlitherLinkBoard extends JFrame
 	public void wallMove(MoveObj m)
 	{
 		Wall w = m.getWallMove();
-		if (w.getIsActive() || w.getFixed())
+		if (w.getIsActive())
 		{
 			Coordinate c = w.getWallStart();
 			System.out.println("Activate X = " + c.getX() + "; Y = " + c.getY());
@@ -333,12 +338,14 @@ public class SlitherLinkBoard extends JFrame
 				{
 					colors[c.getX()][c.getY()][0] = 0;
 					pnlCells[c.getX()][c.getY()]
-							.setBorder(defaultBorder);
+							.setBorder(getActiveBorder(colors[c.getX()][c
+							        									.getY()]));
 				} else
 				{
 					colors[c.getX() - 1][c.getY()][2] = 0;
 					pnlCells[c.getX() - 1][c.getY()]
-							.setBorder(defaultBorder);
+							.setBorder(getActiveBorder(colors[c.getX() - 1][c
+							            									.getY()]));
 				}
 			} else
 			{
@@ -346,12 +353,14 @@ public class SlitherLinkBoard extends JFrame
 				{
 					colors[c.getX()][c.getY()][1] = 0;
 					pnlCells[c.getX()][c.getY()]
-							.setBorder(defaultBorder);
+							.setBorder(getActiveBorder(colors[c.getX()][c
+							        									.getY()]));
 				} else
 				{
 					colors[c.getX()][c.getY() - 1][3] = 0;
 					pnlCells[c.getX()][c.getY() - 1]
-							.setBorder(defaultBorder);
+							.setBorder(getActiveBorder(colors[c.getX()][c
+							        									.getY() - 1]));
 				}
 			}
 		}
