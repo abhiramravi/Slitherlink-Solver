@@ -432,6 +432,7 @@ public class MainSolver {
 			}
 			if(isGameOver()){
 				System.out.println("GAME OVRE after " + n + " BASE CASE steps");
+				Grid.cellLst = getCellLstCopy(cellLst);
 				isSolved = true;
 				break;
 			}
@@ -456,7 +457,6 @@ public class MainSolver {
 				System.out.println("NUMBER OF MOVES "+ allMoveLst.size());
 				Grid.isSolved = true;
 				Grid.cellLst = getCellLstCopy(cellLst);
-				
 			}
 			else{
 				System.out.println("Something is wrong");
@@ -734,31 +734,35 @@ public class MainSolver {
 				if( color != 0){
 					if(checkBounds(i-1, j) && cellLst[i-1][j].getCellColor() != 0 && !tmpCell.getTopWall().getFixed() ){
 						tmp = cellLst[i-1][j].getCellColor() != color;
-						tmpCell.getTopWall().setFixed(true, tmp);
-						if(tmp)
-							allMoveLst.add( new MoveObj(cellLst[i-1][j].getTopWall()));
-						to_ret = true;
+						if(tmp){
+							tmpCell.getTopWall().setFixed(true, tmp);
+							allMoveLst.add( new MoveObj(tmpCell.getTopWall()));
+							to_ret = true;
+						}
 					}
 					if(checkBounds(i+1, j) && cellLst[i+1][j].getCellColor() != 0 && !tmpCell.getBottomWall().getFixed()){
 						tmp = cellLst[i+1][j].getCellColor() != color;
-						tmpCell.getBottomWall().setFixed(true, tmp);
-						if(tmp)
-							allMoveLst.add( new MoveObj(cellLst[i+1][j].getBottomWall()));
-						to_ret = true;
+						if(tmp){
+							tmpCell.getBottomWall().setFixed(true, tmp);
+							allMoveLst.add( new MoveObj(tmpCell.getBottomWall()));
+							to_ret = true;
+						}
 					}
 					if(checkBounds(i, j-1) && cellLst[i][j-1].getCellColor() != 0 && !tmpCell.getLeftWall().getFixed()){
 						tmp = cellLst[i][j-1].getCellColor() != color;
-						tmpCell.getLeftWall().setFixed(true, tmp);
-						if(tmp)
-							allMoveLst.add( new MoveObj(cellLst[i][j-1].getLeftWall()));
-						to_ret = true;
+						if(tmp){
+							tmpCell.getLeftWall().setFixed(true, tmp);
+							allMoveLst.add( new MoveObj(tmpCell.getLeftWall()));
+							to_ret = true;
+						}
 					}
 					if(checkBounds(i, j+1) && cellLst[i][j+1].getCellColor() != 0 && !tmpCell.getRightWall().getFixed()){
 						tmp = cellLst[i][j+1].getCellColor() != color;
-						tmpCell.getRightWall().setFixed(true, tmp);
-						if(tmp)
-							allMoveLst.add( new MoveObj(cellLst[i][j+1].getRightWall()));
-						to_ret = true;
+						if(tmp){
+							tmpCell.getRightWall().setFixed(true, tmp);
+							allMoveLst.add( new MoveObj(tmpCell.getRightWall()));
+							to_ret = true;
+						}
 					}
 				}
 			}
@@ -775,6 +779,7 @@ public class MainSolver {
 		for( i = 0; i < colSize; ++i){
 			if(cellLst[0][i].getNodeVal() == 0 && cellLst[0][i].getCellColor() == 0){
 				cellLst[0][i].setCellColor(1, true);
+				allMoveLst.add( new MoveObj(cellLst[0][i]));
 				if(cellLst[1][i].getCellColor() == 0){
 					cellLst[1][i].setCellColor(1, true);
 					allMoveLst.add( new MoveObj(cellLst[1][i]));
@@ -790,6 +795,7 @@ public class MainSolver {
 			}
 			if(cellLst[rowSize-1][i].getNodeVal() == 0 && cellLst[rowSize-1][i].getCellColor() == 0){
 				cellLst[rowSize-1][i].setCellColor(1, true);
+				allMoveLst.add( new MoveObj(cellLst[rowSize-1][i]));
 				if(cellLst[rowSize-2][i].getCellColor() == 0){
 					cellLst[rowSize-2][i].setCellColor(1, true);
 					allMoveLst.add( new MoveObj(cellLst[rowSize-2][i]));
@@ -808,6 +814,7 @@ public class MainSolver {
 		for( i = 1; i < rowSize-1; ++i){
 			if(cellLst[i][0].getNodeVal() == 0 && cellLst[i][0].getCellColor() == 0){
 				cellLst[i][0].setCellColor(1, true);
+				allMoveLst.add( new MoveObj(cellLst[i][0]));
 				if(cellLst[i][1].getCellColor() == 0){
 					cellLst[i][1].setCellColor(1, true);
 					allMoveLst.add( new MoveObj(cellLst[i][1]));
@@ -823,6 +830,7 @@ public class MainSolver {
 			}
 			if(cellLst[i][colSize-1].getNodeVal() == 0 && cellLst[i][colSize-1].getCellColor() == 0){
 				cellLst[i][colSize-1].setCellColor(1, true);
+				allMoveLst.add( new MoveObj(cellLst[i][colSize-1]));
 				if(cellLst[i][colSize-2].getCellColor() == 0){
 					cellLst[i][colSize-2].setCellColor(1, true);
 					allMoveLst.add( new MoveObj(cellLst[i][colSize-2]));
@@ -1531,13 +1539,18 @@ public class MainSolver {
 		}
 		Cell[][] cellcopy = getCellLstCopy(cellLst);
 		DisjointSet dscopy = ds.getCopy();
-		cellLst[emptyCellCoordinate.getX()][emptyCellCoordinate.getY()].setCellColor(1, true);
+		int color = 1;
+		if(level%2 == 0)
+			color = 2;
+		cellLst[emptyCellCoordinate.getX()][emptyCellCoordinate.getY()].setCellColor(color, true);
 		allMoveLst.add( new MoveObj(cellLst[emptyCellCoordinate.getX()][emptyCellCoordinate.getY()]));
 		if(backTrack())
 			return true;
+		addDifference(cellcopy);
 		ds = dscopy.getCopy();
 		cellLst = getCellLstCopy(cellcopy);
-		cellLst[emptyCellCoordinate.getX()][emptyCellCoordinate.getY()].setCellColor(2, true);
+		color = color == 1 ? 2 : 1;
+		cellLst[emptyCellCoordinate.getX()][emptyCellCoordinate.getY()].setCellColor(color, true);
 		allMoveLst.add( new MoveObj(cellLst[emptyCellCoordinate.getX()][emptyCellCoordinate.getY()]));
 		return backTrack();
 	}
@@ -1576,6 +1589,16 @@ public class MainSolver {
 	}
 	*/
 	
+	private static void addDifference(Cell[][] cellcopy) {
+		Vector<Wall> oldLst =  Grid.getAllWalls(cellcopy);
+		Vector<Wall> newLst =  Grid.getAllWalls(cellLst);
+		int i;
+		for(i = 0; i < oldLst.size(); ++i){
+			if(oldLst.get(i).getIsActive() != newLst.get(i).getIsActive())
+				allMoveLst.add( new MoveObj(oldLst.get(i)));
+		}
+	}
+
 	/*
 	 * Max Node Val
 	 */
