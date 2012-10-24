@@ -287,7 +287,7 @@ public class SlitherLinkBoard extends JFrame
 	public void wallMove(MoveObj m)
 	{
 		Wall w = m.getWallMove();
-		if (w.getIsActive() || w.getFixed())
+		if (w.getIsActive())
 		{
 			Coordinate c = w.getWallStart();
 			System.out.println("Activate X = " + c.getX() + "; Y = " + c.getY());
