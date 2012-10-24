@@ -122,3 +122,16 @@ TOOK 7576 RECURSIONS WITH HEURISTIC 1
 TOOK 263 RECURSIONS WITH HEURISTIC 3
 TOOK 1030 WITH 4th
 TOOK 623 WITH 5th
+
+Doesnt Work for cases, with More than one solution ( which is not correct form of input according to SlitherLink rules )
+Ex :
+
+6 6
+-1 -1 -1 -1 -1 -1
+-1 -1 -1 3 -1 -1
+-1 -1 2 -1 2 -1
+3 3 -1 -1 -1 3
+-1 -1 -1 -1 -1 -1
+-1 -1 -1 -1 -1 -1
+
+(Thanks to Karthik 'piney' Abhinav for pointing this out! )

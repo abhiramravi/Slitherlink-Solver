@@ -1414,6 +1414,8 @@ public class MainSolver {
 		for( i = 0; i < rowSize; ++i){
 			for( j = 0; j < colSize; ++j){
 				tmpCell = cellLst[i][j];
+				if(tmpCell.getActiveWalls() == 4)
+					return false;
 				color = tmpCell.getCellColor();
 				parent = ds.findSet(getIndex(i, j));
 				if(color != 0){
@@ -1592,11 +1594,15 @@ public class MainSolver {
 	private static void addDifference(Cell[][] cellcopy) {
 		Vector<Wall> oldLst =  Grid.getAllWalls(cellcopy);
 		Vector<Wall> newLst =  Grid.getAllWalls(cellLst);
-		int i;
-		for(i = 0; i < oldLst.size(); ++i){
+		int i, j;
+		for(i = 0; i < oldLst.size(); ++i)
 			if(oldLst.get(i).getIsActive() != newLst.get(i).getIsActive())
 				allMoveLst.add( new MoveObj(oldLst.get(i)));
-		}
+		
+		for( i = 0; i < rowSize; ++i)
+			for( j = 0; j < colSize; ++j)
+				if(cellcopy[i][j].getCellColor() != cellLst[i][j].getCellColor())
+					allMoveLst.add( new MoveObj( cellcopy[i][j]));
 	}
 
 	/*
