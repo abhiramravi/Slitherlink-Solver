@@ -1,18 +1,32 @@
 package datastructure;
 
-
 import java.util.ArrayList;
 import java.util.Vector;
+
+/**
+ * This Class contains the Static variables and Static Methods to modify the Grid. 
+ */
 public class Grid {
 	
 	private static int noRows;
 	private static int noColumns;
 	public static boolean isSolved;
+	/*
+	 * CellLst array contains all the Cells of the Game Grid along with the Game board inputs
+	 */
 	public static Cell[][] cellLst;
+	/**
+	 * Disjoint Set to solve the connected components problem of Cells, 
+	 * to simplify the Back tracking part of the solver.  
+	 */
 	public static DisjointSet ds;
+	
+	/*
+	 * Contains the 'set' of all Moves which includes cell colouring and wall colouring in the Game Grid 
+	 */
 	public static ArrayList<MoveObj> allMoveLst;
 
-	/*
+	/**
 	 * Setter Methods
 	 */
 	public void setRows(int rows){
@@ -22,7 +36,7 @@ public class Grid {
 		noColumns = cols;
 	}
 	
-	/*
+	/**
 	 * Getter Methods
 	 */
 	public static int getRows(){
@@ -33,13 +47,17 @@ public class Grid {
 	}
 	
 	/**
-	 * Function to get the Set of all the Wall in random order
-	 * @return : Wall List of the Grid
+	 * Function to get the Set of all the Walls in an unordered list for the default Cell array 
+	 * @return Vector of all the Walls of the Game grid
 	 */
 	public static Vector<Wall> getAllWalls(){
 		return getAllWalls(cellLst);
 	}
 	
+	/**
+	 * Function to get the Set of all the Walls in an unordered list for the given Cell array
+	 * @return : Wall List of the Grid
+	 */
 	public static Vector<Wall> getAllWalls(Cell[][] cellArr){
 		Vector<Wall> wallLst = new Vector<Wall>(2*noRows*noColumns + noColumns + noRows);
 		int i, j;
@@ -57,7 +75,7 @@ public class Grid {
 	}
 	
 	/**
-	 * Function to initialize the entire Grid with the Input values
+	 * Function to initialise the entire Grid with the Input values
 	 * @param rows : Number of rows in the grid
 	 * @param cols : Number of columns in the grid
 	 * @param inpCellVal : The Game board input numbers

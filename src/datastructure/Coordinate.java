@@ -1,5 +1,8 @@
 package datastructure;
 
+/**
+ * Class implements the Data Structure to represent the Coordinates of Sub structures of the Game Grid 
+ */
 public class Coordinate {
 
 	private int xpos, ypos;
@@ -9,7 +12,7 @@ public class Coordinate {
 		this.setY(y);
 	}
 	
-	/*
+	/**
 	 * Getter Methods
 	 */
 	public int getX() {
@@ -19,7 +22,7 @@ public class Coordinate {
 		return this.ypos;
 	}
 	
-	/*
+	/**
 	 * Setter Methods
 	 */
 	public void setX(int x){

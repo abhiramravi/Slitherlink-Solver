@@ -1,6 +1,5 @@
 package backend;
 
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Vector;
@@ -12,53 +11,173 @@ import datastructure.Grid;
 import datastructure.MoveObj;
 import datastructure.Wall;
 
+/**
+ * This class implements the Basic Solver of the SlitherLink given the Variables initialised by the Grid Class.
+ * The idea of 'Parity' is used to efficiently colour the Cells and hence Walls.
+ */
+
 public class MainSolver {
+	/**
+	 * Local Copy of the Game Grid variables
+	 */
 	private static int rowSize, colSize;
 	private static Cell[][] cellLst;
-	private static Cell outerCell = new Cell(-1);
 	private static DisjointSet ds;
-	private static int level;
-	private static int[][] posArr;
 	private static ArrayList<MoveObj> allMoveLst;
 	
-	public static boolean checkBounds(int x, int y){
-		return ( x < 0 || y < 0 || x >= rowSize || y >= colSize) ? false :  true;
-	}
+	/**
+	 * @val outerCell: All the outer cells form one single clique hence represented by one common Cell.
+	 * @val level: The number of leaves visited by the Back Tracking Solver ( Not necessarily the number of the back Tracks done by the Heuristic )
+	 */
+	private static Cell outerCell = new Cell(-1);
+	private static int level;
 	
-	public static int getIndex(int x, int y){
-		return checkBounds(x,y) ? ( x*rowSize + y + 2 ) : 0;
-	}
 	
-	private static Cell[][] getCellLstCopy(Cell[][] cellArr){
-		int i, j;
-		Cell[][] copy = new Cell[rowSize][colSize];
-		for( i = 0; i < rowSize; ++i)
-			for( j = 0; j < colSize; ++j)
-				copy[i][j] = cellArr[i][j].getCopy();
-		return copy;
-	}
+	private static int[][] posArr;
+	private static int MaxAllowedMoves = (int)Math.pow(10, 5);
 	
 	public static void basicSolver(){
-		/* 
-		 * Initialization of the static variables
+		
+		/**
+		 * Initialisation of the static variables
 		 */
-		ds = Grid.ds;
-		cellLst = Grid.cellLst;
-		outerCell.setCellColor(1, true);
 		rowSize = Grid.getRows();
 		colSize = Grid.getColumns();
-		posArr = new int[rowSize+1][colSize+1];
+		ds = Grid.ds;
+		cellLst = Grid.cellLst;
 		allMoveLst = Grid.allMoveLst;
+		
+		outerCell.setCellColor(1, true);
 		level = 0;
 		
+		posArr = new int[rowSize+1][colSize+1];
+		
+		/**
+		 * Bases Case Solving Functions
+		 * These functions colour only the Cell Walls
+		 * O(rowSize*colsSize) for each function call
+		 */
+		HandleZeroCell();
+		HandleAdjZeroThree();
+		HandleDiaZeroThree();
+		HandleAdjThree();
+		HandleDiaThree();
+		
+		/**
+		 * Solver Functions to Handle values present in the corner Cells
+		 * O(1) for each function call
+		 */
+		handleCorner(cellLst[0][0]);
+		handleCorner(cellLst[0][colSize-1]);
+		handleCorner(cellLst[rowSize-1][0]);
+		handleCorner(cellLst[rowSize-1][colSize-1]);
+		
+		/**
+		 * Bases Case Solvers to colour the Cells using the Walls coloured as separators
+		 * O(rowSize*colsSize) for each function call
+		 */
+		colorBorderCells();
+		colorZeroCells();
+		
+		/**
+		 * Temporary variables used for solving the Bases Cases iteratively
+		 */
+		int n = 0, i, j;
+		boolean isCorrect = true, isSolved = false, flag = true, tmpflag;
+		
+		/**
+		 * Iteratively solving the Bases Cases until all the cases fail to make at-least one successful move
+		 */
+		while(flag && n <= MaxAllowedMoves){
+			
+			flag = colorOneAdj();
+			
+			tmpflag = colorTwoAdj();
+			flag = flag ? flag : tmpflag;
+			
+			tmpflag = colorThreeAdj();
+			flag = flag ? flag : tmpflag;
+			
+			tmpflag = colorZeroAdj();
+			flag = flag ? flag : tmpflag;
+			
+			tmpflag = cellAroundCorner();
+			flag = flag ? flag : tmpflag;
+			
+			tmpflag = connectAdjSets();
+			flag = flag ? flag : tmpflag;
+			
+			if(!CheckBoardStateCorrect()){
+				System.out.println("SOMETHING IS WRONG WITH THE CONSTRUCTION AND BASE CASE " + n);
+				isCorrect = false;
+				break;
+			}
+			
+			if(isGameOver()){
+				System.out.println("GAME OVER after " + n + " BASE CASE steps");
+				Grid.cellLst = getCellLstCopy(cellLst);
+				isSolved = true;
+				break;
+			}
+			
+			++n;
+			
+			/**
+			 * Printing counter variable
+			 */
+			if(n%500 == 0)
+				System.out.println(n);
+		}
+		
+		/**
+		 * If the Game is not solved by the Bases Case Iteration, Back Tracking is used
+		 */
+		if(!isSolved && isCorrect){
+			
+			System.out.println("BASE CASE DONE IN " + n + " STEPS");
+			
+			/**
+			 * Debugging print statements
+			 */
+			for( i = 0; i < rowSize; ++i, System.out.println())
+				for(  j = 0; j < colSize; ++j)
+					System.out.print(ds.findSet(getIndex(i, j)) + " ");
+			
+			System.out.println("Calling BackTrack");
+			
+			if(backTrack()){
+				System.out.println("Solution Found");
+				System.out.println("BACK TRACK DONE AFTER VISITING THE LEAVES "+ level + " TIMES");
+				System.out.println("TOTAL NUMBER NUMBER OF MOVES MADE : "+ allMoveLst.size());
+				Grid.isSolved = true;
+				Grid.cellLst = getCellLstCopy(cellLst);
+			}
+			else{
+				System.out.println("SOMETHING IS WRONG WITH THE INPUT OR HEURISTIC");
+				Grid.isSolved = false;
+			}
+			
+			/**
+			 * Debugging print statements
+			 */
+			for( i = 0; i < rowSize; ++i, System.out.println())
+				for(  j = 0; j < colSize; ++j)
+					System.out.print(ds.findSet(getIndex(i, j)) + " ");
+			
+			for( i = 0; i < rowSize; ++i, System.out.println())
+				for(  j = 0; j < colSize; ++j)
+					System.out.print(cellLst[i][j].getCellColor() + " ");
+		}
+	}
+	
+	/**
+	 * Function Checks for Nodes with value 0 in the Game Grid
+	 * This Sets all the four Walls of '0' Cell to 'Fixed' and 'Not Active'
+	 */
+	private static void HandleZeroCell(){
 		Cell tmpCell;
 		int i, j;
 		
-		/*
-		 * Works!
-		 * Checking for '0' in the grid.
-		 * Setting all the four edges of those cells to 'Fixed' and 'Not Active'.  
-		 */
 		for( i = 0; i < rowSize; ++i){
 			for( j = 0; j < colSize; ++j){
 				tmpCell = cellLst[i][j];
@@ -82,12 +201,16 @@ public class MainSolver {
 				}
 			}
 		}
+	}
+	
+	/**
+	 * Function Checks for the adjacent Cells with values 0 and 3
+	 * This Sets all the edges of the '3' Cell other than the common edge to 'Fixed' and 'Active'.
+	 */
+	private static void HandleAdjZeroThree(){
+		Cell tmpCell;
+		int i, j;
 		
-		/*
-		 * Works!
-		 * Checking for Adjacent '0' and '3'
-		 * Setting all the edges other than the sharing edge to 'Fixed' and 'Active'.
-		 */
 		for( i = 0; i < rowSize; ++i){
 			for( j = 0; j < colSize; ++j){
 				if(cellLst[i][j].getNodeVal() == 0){
@@ -186,12 +309,16 @@ public class MainSolver {
 				}
 			}
 		}
+	}
+	
+	/**
+	 * Function Checks for Diagonal Nodes with values 0 and 3
+	 * Setting the two edges incident at the common corner ( of 0 and 3 ) to 'Fixed' and 'Active' 
+	 */
+	private static void HandleDiaZeroThree(){
+		Cell tmpCell;
+		int i, j;
 		
-		/*
-		 * Works!
-		 * Checking for Diagonal '0' and '3'
-		 * Setting the two edges incident at the common corner ( of 0 and 3 ) to 'Fixed' and 'Active' 
-		 */
 		for( i = 0; i < rowSize; ++i){
 			for( j = 0; j < colSize; ++j){
 				if(cellLst[i][j].getNodeVal() == 0){
@@ -242,12 +369,15 @@ public class MainSolver {
 				}
 			}
 		}
+	}
+	
+	/**
+	 * Function Checks for Adjacent Cells with value 3
+	 * This sets the common edge and the two parallel edges to common edge, to 'Fixed' and 'Active' 
+	 */
+	private static void HandleAdjThree(){
+		int i, j;
 		
-		/*
-		 * Works!
-		 * Checking for Two Adjacent 3's
-		 * Setting the sharing edge and the two other parallel edges to it to 'Fixed' and 'Active' 
-		 */
 		for( i = 0; i < rowSize; ++i){
 			for( j = 0; j < colSize; ++j){
 				if(cellLst[i][j].getNodeVal() == 3){
@@ -311,11 +441,15 @@ public class MainSolver {
 			}
 		}
 		
-		/*
-		 * Works!
-		 * Checking for 2 Diagonal 3's
-		 * Setting the outermost opposite edges ( 2 per cell ) to 'Fixed' and 'Active'
-		 */
+	}
+	
+	/**
+	 * Function Checks for Diagonal Nodes with value 3
+	 * This sets the outer edges of each Cell to 'Fixed' and 'Active'
+	 */
+	private static void HandleDiaThree(){
+		int i, j;
+		
 		for( i = 0; i < rowSize; ++i){
 			for( j = 0; j < colSize; ++j){
 				if(cellLst[i][j].getNodeVal() == 3){
@@ -394,91 +528,11 @@ public class MainSolver {
 				}
 			}
 		}
-		
-		/*
-		 * Checking for Corner cells
-		 */
-		handleCorner(cellLst[0][0]);
-		handleCorner(cellLst[0][colSize-1]);
-		handleCorner(cellLst[rowSize-1][0]);
-		handleCorner(cellLst[rowSize-1][colSize-1]);
-		
-		/*
-		 * For coloring the cells to check whether its inside or outside the grid
-		 */
-		colorBorderCells();
-		colorZeroCells();
-		int n = 0;
-		boolean isCorrect = true, isSolved = false;
-		boolean flag = true, tmpflag;
-		while(flag){
-			flag = colorOneAdj();
-			tmpflag = colorTwoAdj();
-			flag = flag ? flag : tmpflag;
-			tmpflag = colorThreeAdj();
-			flag = flag ? flag : tmpflag;
-			tmpflag = colorZeroAdj();
-			flag = flag ? flag : tmpflag;
-			tmpflag = cellAroundCorner();
-			flag = flag ? flag : tmpflag;
-			//tmpflag = oneCellNotColored();
-			//flag = flag ? flag : tmpflag;
-			tmpflag = connectAdjSets();
-			flag = flag ? flag : tmpflag;
-			if(!CheckBoardStateCorrect()){
-				System.out.println("SOMETHING IS WRONG WITH THE CONSTRUCTION AND BASE CASE " + n);
-				isCorrect = false;
-				break;
-			}
-			if(isGameOver()){
-				System.out.println("GAME OVRE after " + n + " BASE CASE steps");
-				Grid.cellLst = getCellLstCopy(cellLst);
-				isSolved = true;
-				break;
-			}
-			++n;
-//			if(n%500 == 0)
-//				System.out.println(n);
-		}
-		if(!isSolved && isCorrect){
-			System.out.println("BASE CASE DONE IN " + n + " STEPS");
-			/*
-			 * Degbuggine print statements
-			 */
-			for( i = 0; i < rowSize; ++i, System.out.println())
-				for(  j = 0; j < colSize; ++j)
-					System.out.print(ds.findSet(getIndex(i, j)) + " ");
-			
-			System.out.println("Calling BackTrack");
-			
-			if(backTrack()){
-				System.out.println("Solution Found");
-				System.out.println("BACK TRACK DONE AFTER VISITING LEAVES "+ level + " TIMES");
-				System.out.println("NUMBER OF MOVES "+ allMoveLst.size());
-				Grid.isSolved = true;
-				Grid.cellLst = getCellLstCopy(cellLst);
-			}
-			else{
-				System.out.println("Something is wrong");
-				Grid.isSolved = false;
-			}
-			
-			/*
-			 * Debugging print statements
-			 */
-			for( i = 0; i < rowSize; ++i, System.out.println())
-				for(  j = 0; j < colSize; ++j)
-					System.out.print(ds.findSet(getIndex(i, j)) + " ");
-			
-			for( i = 0; i < rowSize; ++i, System.out.println())
-				for(  j = 0; j < colSize; ++j)
-					System.out.print(cellLst[i][j].getCellColor() + " ");
-		}
 	}
 	
-	/*
-	 * Works like a charm!
-	 * To handle the numbers present in the corners of the grid
+	/**
+	 * Function to handle the Corner cells with value other than -1
+	 * @param tmpCell: The corner Cell which must be solved for
 	 */
 	public static void handleCorner(Cell tmpCell){
 		int x = tmpCell.getPosition().getX();
@@ -529,7 +583,6 @@ public class MainSolver {
 			}
 			break;
 			case 3:{
-				//ds.union(1, getIndex(x, y));
 				if(x == 0 && y == 0){
 					if(!tmpCell.getTopWall().getFixed()){
 						tmpCell.getTopWall().setFixed(true, true);
@@ -618,9 +671,8 @@ public class MainSolver {
 		}
 	}
 	
-	/*
-	 * Works!
-	 * Coloring Cells if the border Wall is set Alive, with color '2'
+	/**
+	 * Function colours the border Cells with colour '2' if the its border Wall is Active
 	 */
 	private static void colorBorderCells(){
 		int i;
@@ -646,11 +698,11 @@ public class MainSolver {
 		}
 	}
 	
-	/*
-	 * Works!
-	 * Draw line between in border, if the Cell comes in 'Inside' part 
+	/**
+	 * Function sets the Border Wall 'Active' if the border cells is coloured with '2'
+	 * @return: True if at-least one Wall is set 'Active'
+	 * 			False otherwise
 	 */
-	
 	private static boolean colorBorderLines(){
 		int i;
 		boolean to_ret = false;
@@ -680,9 +732,11 @@ public class MainSolver {
 		}
 		return to_ret;
 	}
-	/*
-	 * Works!
-	 * Adding Complimentary colors, every time a line is crossed 
+	
+	/**
+	 * Add complimentary colours to the Cells whose common edge is 'Active'
+	 * @return: True if at-least one Cell is coloured
+	 * 			False otherwise
 	 */
 	private static boolean colorLineSep(){
 		int i, j, color;
@@ -719,9 +773,10 @@ public class MainSolver {
 		return to_ret;
 	}
 	
-	/*
-	 * Works!
-	 * To draw Lines between cells with different colors
+	/**
+	 * Function set the common edge between Cells with complimentary colours to 'Active' 
+	 * @return: True if at-least one Wall is set 'Active'
+	 * 			False otherwise
 	 */
 	private static boolean drawLineColorSep(){
 		int i, j, color;
@@ -770,9 +825,8 @@ public class MainSolver {
 		return to_ret;
 	}
 	
-	/*
-	 * Works!
-	 * Coloring the '0' cells present in the border along with its neighbours, with color '1' 
+	/**
+	 * Function colours the Cells with value 0 and its Neighbours, with colour '1'
 	 */
 	private static void colorZeroCells(){
 		int i;
@@ -850,14 +904,16 @@ public class MainSolver {
 		colorBorderLines();
 	}
 	
-	/*
-	 * Works!
-	 * check for '2' cell with 2 adjacent cells having same/different colors
+	/**
+	 * Function Handle the Cases where Adjacent cells of Node value 2 having same/different colours ( != 0 )
+	 * Idea : Cells with value 2 should have two neighbours with same colour and the rest with different colour 
+	 * @return: True if at-least one Wall is set 'Active' or a Cell is coloured
+	 * 			False otherwise
 	 */
 	private static boolean colorTwoAdj(){
 		int i, j, color;
 		Cell tmpCell;
-		boolean to_ret = false;
+		boolean to_ret = false, tmp;
 		for( i = 0; i < rowSize; ++i){
 			for( j = 0; j < colSize; ++j){
 				List<Cell> notColored = new ArrayList<Cell>();
@@ -865,7 +921,7 @@ public class MainSolver {
 				List<Cell> Color2 = new ArrayList<Cell>();
 				tmpCell = cellLst[i][j];
 				color = tmpCell.getCellColor();
-				if(tmpCell.getNodeVal() == 2){
+				if(tmpCell.getNodeVal() == 2 && tmpCell.noAdjColored(cellLst) != 0){
 					oneTwoThreeSubFunction(i-1, j, Color1, Color2, notColored, tmpCell);
 					oneTwoThreeSubFunction(i+1, j, Color1, Color2, notColored, tmpCell);
 					oneTwoThreeSubFunction(i, j-1, Color1, Color2, notColored, tmpCell);
@@ -913,7 +969,7 @@ public class MainSolver {
 				}
 			}
 		}
-		boolean tmp = colorLineSep();
+		tmp = colorLineSep();
 		to_ret = to_ret ? to_ret : tmp;
 		tmp = drawLineColorSep();
 		to_ret = to_ret ? to_ret : tmp;
@@ -922,18 +978,21 @@ public class MainSolver {
 		return to_ret;
 	}
 	
-	/*
-	 * Works!
+	/**
+	 * Function Handles the Case where a Cell with value 0 has at-least one coloured neighbour
+	 * Idea : Cells with value 1 can have only one Neighbour with opposite colour
+	 * @return: True if at-least one Wall is set 'Active' or a Cell is coloured 
+	 * 			False otherwise
 	 */
 	private static boolean colorOneAdj(){
 		int i, j, color;
-		boolean to_ret = false;
+		boolean to_ret = false, tmp;
 		Cell tmpCell;
 		for( i = 0; i < rowSize; ++i){
 			for( j = 0; j < colSize; ++j){
 				tmpCell = cellLst[i][j];
 				color = tmpCell.getCellColor();
-				if(tmpCell.getNodeVal() == 1){
+				if(tmpCell.getNodeVal() == 1 && tmpCell.noAdjColored(cellLst) != 0){
 					List<Cell> Color1 = new ArrayList<Cell>();
 					List<Cell> Color2 = new ArrayList<Cell>();
 					List<Cell> notColored = new ArrayList<Cell>();
@@ -1015,7 +1074,8 @@ public class MainSolver {
 				}
 			}
 		}
-		boolean tmp = colorLineSep();
+		
+		tmp = colorLineSep();
 		to_ret = to_ret ? to_ret : tmp;
 		tmp = drawLineColorSep();
 		to_ret = to_ret ? to_ret : tmp;
@@ -1024,18 +1084,21 @@ public class MainSolver {
 		return to_ret;
 	}
 	
-	/*
-	 * works!
+	/**
+	 * Function Handles the Case where a Cell with value 3 has at-least one coloured neighbour
+	 * Idea : Cells with value 3 can have only one neighbour with same colour 
+	 * @return: True if at-least one Wall is set 'Active' or a Cell is coloured 
+	 * 			False otherwise
 	 */
 	private static boolean colorThreeAdj(){
 		int i, j, color;
 		Cell tmpCell;
-		boolean to_ret = false;
+		boolean to_ret = false, tmp;
 		for( i = 0; i < rowSize; ++i){
 			for( j = 0; j < colSize; ++j){
 				tmpCell = cellLst[i][j];
 				color = tmpCell.getCellColor();
-				if(tmpCell.getNodeVal() == 3){
+				if(tmpCell.getNodeVal() == 3 && tmpCell.noAdjColored(cellLst) != 0){
 					List<Cell> Color1 = new ArrayList<Cell>();
 					List<Cell> Color2 = new ArrayList<Cell>();
 					List<Cell> notColored = new ArrayList<Cell>();
@@ -1113,7 +1176,7 @@ public class MainSolver {
 				}
 			}
 		}
-		boolean tmp = colorLineSep();
+		tmp = colorLineSep();
 		to_ret = to_ret ? to_ret : tmp;
 		tmp = drawLineColorSep();
 		to_ret = to_ret ? to_ret : tmp;
@@ -1122,6 +1185,15 @@ public class MainSolver {
 		return to_ret;
 	}
 	
+	/**
+	 * Helper Function to group the Cells adjacent to the given cell 'tmpCell' with their colour
+	 * @param i : The X Coordinate of the Cell under consideration
+	 * @param j : The Y Coordinate of the Cell under consideration
+	 * @param Color1 : The List into which Adjacent cells with colour '1' is to be filled
+	 * @param Color2 : The List into which Adjacent cells with colour '2' is to be filled
+	 * @param notColored : The List into which un-coloured Adjacent cells is to be filled
+	 * @param tmpCell : The given Cell
+	 */
 	private static void oneTwoThreeSubFunction(int i, int j, List<Cell> Color1, List<Cell> Color2, List<Cell> notColored, Cell tmpCell){
 		if(!checkBounds(i, j))
 			Color1.add(outerCell);
@@ -1134,8 +1206,16 @@ public class MainSolver {
 
 	}
 	
-	/*
-	 * Works!
+	/**
+	 * Function to handle the Cases as described in the below grid diagram
+	 * 
+	 * 									0								  1/2
+	 * 						   -------				(or)		 -------
+	 * 							 1/2 |							   0   |
+	 * 								 |								   |
+	 * 	Idea : The Cells Meeting at the corner, should have have opposite colours if the corner Walls are Active or vice versa
+	 * @return 	True if at-least one Wall is set 'Active' or a Cell is coloured 
+	 * 			False otherwise
 	 */
 	private static boolean cellAroundCorner(){
 		int i, j, color;
@@ -1176,6 +1256,15 @@ public class MainSolver {
 		return to_ret;
 	}
 	
+	/**
+	 * Helper Function to colour the Cells around the corner with opposite colour
+	 * @param i : The X Coordinate of the Cell under consideration
+	 * @param j : The Y Coordinate of the Cell under consideration
+	 * @param tmpCell : The given Cell
+	 * @param color : The colour the given Cell
+	 * @return 	True if at-least one Cell is coloured 
+	 * 			False otherwise
+	 */
 	private static boolean cellAroundCornerSubFunction(int i, int j, Cell tmpCell, int color){
 		boolean to_ret = false;
 		if(color != 0){
@@ -1195,56 +1284,11 @@ public class MainSolver {
 		return to_ret;
 	}
 	
-	/*Function not working
-	 * Have to fix this! ( But the Solver works fine w/o this )
+	/**
+	 * Function to colour the Cell with value 0 and its neighbours given at-least one of them is coloured
+	 * @return 	True if at-least one Cell is coloured 
+	 * 			False otherwise
 	 */
-	/*
-	private static boolean oneCellNotColored(){
-		int i, j, color;
-		Cell tmpCell;
-		boolean to_ret = false;
-		for( i = 0; i < rowSize; ++i){
-			for( j = 0; j < colSize; ++j){
-				tmpCell = cellLst[i][j];
-				color = tmpCell.getCellColor();
-				if(tmpCell.getNodeVal() == 1){
-					List<Cell> Color1 = new ArrayList<Cell>();
-					List<Cell> Color2 = new ArrayList<Cell>();
-					List<Cell> notColored = new ArrayList<Cell>();
-					oneTwoThreeSubFunction(i+1, j, Color1, Color2, notColored, tmpCell);
-					oneTwoThreeSubFunction(i-1, j, Color1, Color2, notColored, tmpCell);
-					oneTwoThreeSubFunction(i, j-1, Color1, Color2, notColored, tmpCell);
-					oneTwoThreeSubFunction(i, j+1, Color1, Color2, notColored, tmpCell);
-					if(color == 0 && Color1.size() < 2 && Color2.size() < 2){
-						if(checkBounds(i-1, j) && tmpCell.getTopWall().getIsActive() && cellLst[i-1][j].getCellColor() == 0){
-							tmpCell.setCellColor(Color1.size()==0 ? 2 : 1, true);
-							to_ret = true;
-						}
-						else if(checkBounds(i+1,j) && tmpCell.getBottomWall().getIsActive() && cellLst[i+1][j].getCellColor() == 0){
-							tmpCell.setCellColor(Color1.size()==0 ? 2 : 1, true);
-							to_ret = true;
-						}
-						else if(checkBounds(i,j+1) && tmpCell.getRightWall().getIsActive() && cellLst[i][j+1].getCellColor() == 0){
-							tmpCell.setCellColor(Color1.size()==0 ? 2 : 1, true);
-							to_ret = true;
-						}
-						else if(checkBounds(i,j-1) && tmpCell.getLeftWall().getIsActive() && cellLst[i][j-1].getCellColor() == 0){
-							tmpCell.setCellColor(Color1.size()==0 ? 2 : 1, true);						
-							to_ret = true;
-						}
-					}
-				}
-			}
-		}
-		boolean tmp = colorLineSep();
-		to_ret = to_ret ? to_ret : tmp;
-		tmp = drawLineColorSep();
-		to_ret = to_ret ? to_ret : tmp;
-		tmp = colorBorderLines();
-		to_ret = to_ret ? to_ret : tmp;
-		return to_ret;
-	}
-	*/
 	private static boolean colorZeroAdj(){
 		int i, j, color;
 		Cell tmpCell;
@@ -1303,6 +1347,14 @@ public class MainSolver {
 		return to_ret;
 	}
 	
+	/**
+	 * Helper Function to Colour a given cell with the given colour under the Boundary conditions
+	 * @param i : The X Coordinate of the Cell under consideration
+	 * @param j : The Y Coordinate of the Cell under consideration
+	 * @param color : The colour with which the Cell must be coloured
+	 * @return 	True if the Cell is coloured 
+	 * 		 	False otherwise
+	 */
 	private static boolean zeroSubFunction(int i, int j, int color){
 		if(checkBounds(i, j) && cellLst[i][j].getCellColor() == 0){
 			cellLst[i][j].setCellColor(color, true);
@@ -1312,6 +1364,12 @@ public class MainSolver {
 		return false;
 	}
 	
+	/**
+	 * Function Colours two Adjacent Cells belonging to same Disjoint Set with same colour or
+	 * Performs Union() of two Adjacent Cells if they have same colour
+	 * @return 	True if at-least one Cell is coloured 
+	 * 		 	False otherwise
+	 */
 	private static boolean connectAdjSets(){
 		int i, j, color, parent;
 		Cell tmpCell;
@@ -1408,6 +1466,17 @@ public class MainSolver {
 		return to_ret;
 	}
 	
+	/**
+	 * Function to check the Correctness of the Game Grid at any given point
+	 * Checks for the following cases,
+	 * 		Adjacent cells belonging to same Disjoint Set but having different colour
+	 * 		Adjacent Cells belonging to different Disjoint Sets but having same colour
+	 * 		Cells with all four Walls 'Active'
+	 * 		A Coordinate with more than 2 'Active' incident Walls
+	 * 		Cells with more 'Active' Walls than its Node value
+	 * @return  True if the Cells colouring and Wall 'Active' is consistent
+	 * 		 	False otherwise
+	 */
 	private static boolean CheckBoardStateCorrect(){
 		int i, j, color, parent;
 		Cell tmpCell;
@@ -1449,9 +1518,6 @@ public class MainSolver {
 			}
 		}
 		
-		/*
-		 * For checking whether any point has morethan 2 lines incident
-		 */
 		for( i = 0; i <= rowSize; ++i)
 			for( j = 0; j <= colSize; ++j)
 				posArr[i][j] = 0;
@@ -1471,6 +1537,12 @@ public class MainSolver {
 		return true;
 	}
 	
+	/**
+	 * Function checks whether the current is a Goal State
+	 * Calls CheckBoardStateCorrect() to check correctness
+	 * @return  True if the Game is solved 
+	 * 		 	False otherwise
+	 */
 	private static boolean isGameOver(){
 		int i, j, insParent = 1, tmp, outParent = 0;
 		boolean setFlag = true, setFlag1 = true;
@@ -1491,75 +1563,85 @@ public class MainSolver {
 					return false;
 			}
 		}
-		for( i = 0; i <= rowSize; ++i)
-			for( j = 0; j <= colSize; ++j)
-				posArr[i][j] = 0;
-		
-		Vector<Wall> tmpWallLst = Grid.getAllWalls(cellLst);
-		for( Wall w : tmpWallLst)
-			if(w.getIsActive()){
-				++posArr[w.getWallStart().getX()][w.getWallStart().getY()];
-				++posArr[w.getWallEnd().getX()][w.getWallEnd().getY()];
-			}
-		
-		for( i = 0; i <= rowSize; ++i)
-			for( j = 0; j <= colSize; ++j)
-				if(posArr[i][j] > 2)
-					return false;
 		return true;
 	}
 	
+	/**
+	 * Function implements the Back Tracking part using a Heuristic
+	 * @return	True if Back tracking result in correct solution
+	 * 			False otherwise
+	 */
 	private static boolean backTrack(){
+		
 		boolean flag = true, tmpflag;
-		while(flag){
+		int color = 1, count = 0;
+		
+		while(flag && count <= MaxAllowedMoves){
+			
 			if(!CheckBoardStateCorrect())
 				return false;
+			
 			flag = colorOneAdj();
+			
 			tmpflag = colorTwoAdj();
 			flag = flag ? flag : tmpflag;
+			
 			tmpflag = colorThreeAdj();
 			flag = flag ? flag : tmpflag;
+			
 			tmpflag = colorZeroAdj();
 			flag = flag ? flag : tmpflag;
+			
 			tmpflag = cellAroundCorner();
 			flag = flag ? flag : tmpflag;
-//			tmpflag = oneCellNotColored();
-//			flag = flag ? flag : tmpflag;
+			
 			tmpflag = connectAdjSets();
 			flag = flag ? flag : tmpflag;
+			
 			if(!CheckBoardStateCorrect())
 				return false;
+			
 			if(isGameOver())
 				return true;
+			
+			++count;
 		}
+		
 		Coordinate emptyCellCoordinate = getFirstNonColored3();
+		
 		if(emptyCellCoordinate == null){
 			++level;
 			if(level%1000 == 0)
 				System.out.println(level);
 			return false;
 		}
+		
 		Cell[][] cellcopy = getCellLstCopy(cellLst);
 		DisjointSet dscopy = ds.getCopy();
-		int color = 1;
+		
 		if(level%2 == 0)
 			color = 2;
+		
 		cellLst[emptyCellCoordinate.getX()][emptyCellCoordinate.getY()].setCellColor(color, true);
 		allMoveLst.add( new MoveObj(cellLst[emptyCellCoordinate.getX()][emptyCellCoordinate.getY()]));
 		if(backTrack())
 			return true;
+		
 		addDifference(cellcopy);
+		
 		ds = dscopy.getCopy();
 		cellLst = getCellLstCopy(cellcopy);
+		
 		color = color == 1 ? 2 : 1;
 		cellLst[emptyCellCoordinate.getX()][emptyCellCoordinate.getY()].setCellColor(color, true);
 		allMoveLst.add( new MoveObj(cellLst[emptyCellCoordinate.getX()][emptyCellCoordinate.getY()]));
 		return backTrack();
 	}
 	
-	/*
-	 * Max Adjacent Cells Coloured
+	/**
+	 * Heuristic : Max Adjacent Cells Coloured
 	 */
+	
 	/*
 	private static Coordinate getFirstNonColored1(){
 		int i, j, count = -1, tmp;
@@ -1577,9 +1659,12 @@ public class MainSolver {
 		return pos;
 	}
 	*/
-	/*
-	 * Naive First Non Coloured Cell Selection
+	
+	
+	/**
+	 *  Heuristic : Naive First Non Coloured Cell Selection
 	 */
+	
 	/*
 	private static Coordinate getFirstNonColored2(){
 		int i, j;
@@ -1591,22 +1676,8 @@ public class MainSolver {
 	}
 	*/
 	
-	private static void addDifference(Cell[][] cellcopy) {
-		Vector<Wall> oldLst =  Grid.getAllWalls(cellcopy);
-		Vector<Wall> newLst =  Grid.getAllWalls(cellLst);
-		int i, j;
-		for(i = 0; i < oldLst.size(); ++i)
-			if(oldLst.get(i).getIsActive() != newLst.get(i).getIsActive())
-				allMoveLst.add( new MoveObj(oldLst.get(i)));
-		
-		for( i = 0; i < rowSize; ++i)
-			for( j = 0; j < colSize; ++j)
-				if(cellcopy[i][j].getCellColor() != cellLst[i][j].getCellColor())
-					allMoveLst.add( new MoveObj( cellcopy[i][j]));
-	}
-
-	/*
-	 * Max Node Val
+	/**
+	 *  Heuristic : Max Node Value
 	 */
 	private static Coordinate getFirstNonColored3(){
 		int i, j, value = -2;
@@ -1621,8 +1692,8 @@ public class MainSolver {
 		return pos;
 	}
 	
-	/*
-	 * Max Active Walls
+	/**
+	 *  Heuristic : Max Active Walls
 	 */
 	/*
 	private static Coordinate getFirstNonColored4(){
@@ -1639,8 +1710,8 @@ public class MainSolver {
 	}
 	*/
 	
-	/*
-	 * Heuristic FIRST + THIRD
+	/**
+	 *  Heuristic :  FIRST + THIRD
 	 */
 	/*
 	private static Coordinate getFirstNonColored5(){
@@ -1667,4 +1738,62 @@ public class MainSolver {
 		return pos;
 	}
 	*/
+	
+	/**
+	 * Function to undo the changes made by the Back Tracking if it did not result in correct solution
+	 * @param cellcopy : A copy of Cell array before back tracking is invoked at every level 
+	 */
+	private static void addDifference(Cell[][] cellcopy) {
+		Vector<Wall> oldLst =  Grid.getAllWalls(cellcopy);
+		Vector<Wall> newLst =  Grid.getAllWalls(cellLst);
+		int i, j;
+		for(i = 0; i < oldLst.size(); ++i)
+			if(oldLst.get(i).getIsActive() != newLst.get(i).getIsActive())
+				allMoveLst.add( new MoveObj(oldLst.get(i)));
+		
+		for( i = 0; i < rowSize; ++i)
+			for( j = 0; j < colSize; ++j)
+				if(cellcopy[i][j].getCellColor() != cellLst[i][j].getCellColor())
+					allMoveLst.add( new MoveObj( cellcopy[i][j]));
+	}
+	
+	/**
+	 * Helper functions for the Basic Solver Function
+	 */
+	
+	/**
+	 * Function to check whether the given 'x' coordinate and 'y' coordinate are within the Game Grid
+	 * @param x: X coordinate
+	 * @param y: Y coordinate
+	 * @return: True if it is within Bounds
+	 * 			False if it is out of Bounds
+	 */
+	public static boolean checkBounds(int x, int y){
+		return ( x < 0 || y < 0 || x >= rowSize || y >= colSize) ? false :  true;
+	}
+	
+	/**
+	 * Function to get the Index in the Disjoint Set array, for the given Cell coordinates
+	 * @param x: X coordinate
+	 * @param y: Y coordinate
+	 * @return: The Disjoint Set array index
+	 */
+	public static int getIndex(int x, int y){
+		return checkBounds(x,y) ? ( x*rowSize + y + 2 ) : 0;
+	}
+	
+	/**
+	 * Function to get a copy of the given Cell array ( Recursively copies its walls ) 
+	 * @param cellArr: The cell array which has to be copied
+	 * @return: A copy of the given Cell array
+	 */
+	private static Cell[][] getCellLstCopy(Cell[][] cellArr){
+		int i, j;
+		Cell[][] copy = new Cell[rowSize][colSize];
+		for( i = 0; i < rowSize; ++i)
+			for( j = 0; j < colSize; ++j)
+				copy[i][j] = cellArr[i][j].getCopy();
+		return copy;
+	}
+	
 }

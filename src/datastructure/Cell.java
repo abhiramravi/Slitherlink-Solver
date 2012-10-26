@@ -2,13 +2,31 @@ package datastructure;
 
 import backend.MainSolver;
 
+/**
+ * This Class defines the Data Structure to represent the cells in the Game Grid
+ */
 public class Cell{
 	private Wall topWall, bottomWall, rightWall, leftWall;
 	private int nodeVal;
-	private Coordinate position;		//Left Top Co-ordinates
-	private int cellColor;				// 0 - no color ; 1 - outer part ; 2 - inner part
+	
+	//The position of the Left Top Corner of the cell is stored in 'position' 
+	private Coordinate position;
+	
+	/**
+	 * Cell colour - 0 if no colour
+	 * 			   - 1 if cell belongs to outer part
+	 * 			   - 2 if cell belongs to inner part
+	 */
+	private int cellColor;
+	
+	//This indicates the whether the current cell is coloured or not
 	private boolean isColored;
 	
+	/**
+	 * Constructor to create Cell object given its value and its left top Coordinate
+	 * @param val: The value of the node
+	 * @param pos: The left top Coordinate of the Cell
+	 */
 	public Cell(int val, Coordinate pos){
 		this.setNodeVal(val);
 		this.setPosition(pos);
@@ -26,6 +44,10 @@ public class Cell{
 		this.setBottomWall(new Wall(new Coordinate(pos.getX()+1, pos.getY()), true));
 	}
 	
+	/**
+	 * Constructor for the Cells in which Walls are not important
+	 * @param val : The value contained in the cell
+	 */
 	public Cell(int val){
 		this.setNodeVal(val);
 		this.setCellColor(0);
@@ -33,7 +55,7 @@ public class Cell{
 		this.setPosition(new Coordinate(0, -2));
 	}
 	
-	/*
+	/**
 	 * Getter Methods
 	 */
 	public Wall getTopWall(){
@@ -61,7 +83,7 @@ public class Cell{
 		return this.isColored;
 	}
 	
-	/*
+	/**
 	 * Setter Methods
 	 */
 	public void setNodeVal(int val){
@@ -93,6 +115,10 @@ public class Cell{
 		this.isColored = b;
 	}
 
+	/**
+	 * The Function returns the Number of active walls of the current Cell
+	 * @return Number of active Walls
+	 */
 	public int getActiveWalls(){
 		int count = 0;
 		if(this.leftWall.getIsActive())
@@ -106,6 +132,12 @@ public class Cell{
 		return count;
 	}
 	
+	/**
+	 * The Functions returns the number of Adjacent cells 'coloured' to the current Cell object,
+	 * 	for the given Grid representation 
+	 * @param cellArr : The cell array in which the current Cell is present
+	 * @return : Number of Adjacent Coloured cells
+	 */
 	public int noAdjColored(Cell[][] cellArr){
 		int count = 0;
 		int i = this.getPosition().getX();
@@ -121,6 +153,11 @@ public class Cell{
 		return count;
 	}
 	
+	/**
+	 * Functions returns a copy of the current Cell. 
+	 * This recursively copies all its walls.
+	 * @return Copy of the current Cell
+	 */
 	public Cell getCopy(){
 		Cell copy = new Cell(this.nodeVal, this.position);
 		copy.setCellColor(this.cellColor, this.isColored);

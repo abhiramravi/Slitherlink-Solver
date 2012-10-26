@@ -1,27 +1,36 @@
 package datastructure;
 
-
+/**
+ * This Class implements the ADT to support the recording of the Moves made by the Solver
+ * @author sabari
+ */
 public class MoveObj {
 	private boolean isWallMove;
 	private Wall wallMove;
 	private Cell CellMove;
 	
-	/*
-	 * Getter Methods
+	/**
+	 * Constructor for the MoveObj to contain a Wall move
+	 * @param a: The Wall modified
 	 */
-	
 	public MoveObj(Wall a){
 		this.isWallMove = true;
 		this.wallMove = a.getCopy();
 		this.CellMove = null;
 	}
-	
+	/**
+	 * Constructor for the MoveObj to contain a Cell move
+	 * @param a: The Cell modified
+	 */
 	public MoveObj(Cell a){
 		this.isWallMove = false;
 		this.wallMove = null;
 		this.CellMove = a.getCopy();
 	}
-	
+
+	/**
+	 * Getter Methods
+	 */
 	public boolean getisWallMove(){
 		return this.isWallMove;
 	}
@@ -34,7 +43,7 @@ public class MoveObj {
 		return this.CellMove;
 	}
 	
-	/*
+	/**
 	 * Setter Methods
 	 */
 	public void setisWallMove(boolean b){

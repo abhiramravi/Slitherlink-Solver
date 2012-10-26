@@ -17,14 +17,20 @@ public class DisjointSet {
 	
 	/**
 	 * This is the MakeSet function of the disjoint set object
+	 * @param size : The number of nodes to be created in the Disjoint Set
 	 */
 	public DisjointSet(int size) {
+		/*
+		 * Let the array index '0' indicate yellow cell and '1' indicate orange cell
+		 */
 		arrSize = size + 2;
 		parent = new int[arrSize];
 		rank = new int[arrSize];
-		// 0 - gray cell 1 - orange cell
 		for( int i = 0; i < arrSize; i++){
-			parent[i] = i;			//Initially every node is its own parent and hence has rank zero
+			/*
+			 * Initially every node is its own parent and hence has rank zero
+			 */
+			parent[i] = i;
 			rank[i] = 0;
 		}
 	}
@@ -69,6 +75,10 @@ public class DisjointSet {
 		}
 	}	
 	
+	/**
+	 * Function to get the copy of the current DisjointSet object
+	 * @return copy : Copy of 'this' DisjointSet
+	 */
 	public DisjointSet getCopy(){
 		DisjointSet copy = new DisjointSet(arrSize);
 		for(int i = 0; i < arrSize; ++i){
@@ -77,5 +87,4 @@ public class DisjointSet {
 		}
 		return copy;
 	}
-	
 }
