@@ -28,13 +28,13 @@ public class MainSolver {
 	/**
 	 * @val outerCell: All the outer cells form one single clique hence represented by one common Cell.
 	 * @val level: The number of leaves visited by the Back Tracking Solver ( Not necessarily the number of the back Tracks done by the Heuristic )
+	 * @val backTrack: The number of times backTrack() function is called by the given Heuristic
 	 */
-	private static Cell outerCell = new Cell(-1);
-	private static int level;
+	private static final Cell outerCell = new Cell(-1);
+	private static int level, backTrack;
 	
 	
 	private static int[][] posArr;
-	private static int MaxAllowedMoves = (int)Math.pow(10, 5);
 	
 	public static void basicSolver(){
 		
@@ -88,7 +88,7 @@ public class MainSolver {
 		/**
 		 * Iteratively solving the Bases Cases until all the cases fail to make at-least one successful move
 		 */
-		while(flag && n <= MaxAllowedMoves){
+		while(flag ){
 			
 			flag = colorOneAdj();
 			
@@ -148,6 +148,7 @@ public class MainSolver {
 			if(backTrack()){
 				System.out.println("Solution Found");
 				System.out.println("BACK TRACK DONE AFTER VISITING THE LEAVES "+ level + " TIMES");
+				System.out.println("TOTAL NUMBER OF BACK-TRACKs "+ backTrack);
 				System.out.println("TOTAL NUMBER NUMBER OF MOVES MADE : "+ allMoveLst.size());
 				Grid.isSolved = true;
 				Grid.cellLst = getCellLstCopy(cellLst);
@@ -1572,11 +1573,12 @@ public class MainSolver {
 	 * 			False otherwise
 	 */
 	private static boolean backTrack(){
+		++backTrack;
 		
 		boolean flag = true, tmpflag;
-		int color = 1, count = 0;
+		int color = 1;
 		
-		while(flag && count <= MaxAllowedMoves){
+		while(flag){
 			
 			if(!CheckBoardStateCorrect())
 				return false;
@@ -1603,11 +1605,9 @@ public class MainSolver {
 			
 			if(isGameOver())
 				return true;
-			
-			++count;
 		}
 		
-		Coordinate emptyCellCoordinate = getFirstNonColored3();
+		Coordinate emptyCellCoordinate = rowSize > 7 ?  getFirstNonColored7() : getFirstNonColored6();
 		
 		if(emptyCellCoordinate == null){
 			++level;
@@ -1641,7 +1641,6 @@ public class MainSolver {
 	/**
 	 * Heuristic : Max Adjacent Cells Coloured
 	 */
-	
 	/*
 	private static Coordinate getFirstNonColored1(){
 		int i, j, count = -1, tmp;
@@ -1660,11 +1659,9 @@ public class MainSolver {
 	}
 	*/
 	
-	
 	/**
 	 *  Heuristic : Naive First Non Coloured Cell Selection
 	 */
-	
 	/*
 	private static Coordinate getFirstNonColored2(){
 		int i, j;
@@ -1675,10 +1672,10 @@ public class MainSolver {
 		return null;
 	}
 	*/
-	
 	/**
 	 *  Heuristic : Max Node Value
 	 */
+	/*
 	private static Coordinate getFirstNonColored3(){
 		int i, j, value = -2;
 		Coordinate pos = null;
@@ -1691,7 +1688,7 @@ public class MainSolver {
 			}
 		return pos;
 	}
-	
+	*/
 	/**
 	 *  Heuristic : Max Active Walls
 	 */
@@ -1709,35 +1706,60 @@ public class MainSolver {
 		return pos;
 	}
 	*/
-	
 	/**
 	 *  Heuristic :  FIRST + THIRD
 	 */
 	/*
 	private static Coordinate getFirstNonColored5(){
-		int i, j, value = -2, count = -1, tmp;
+		int i, j, value = -2, tmp, tmp1;
 		Coordinate pos = null;
 		for( i = 0; i < rowSize; ++i)
 			for( j = 0; j < colSize; ++j){
-				if(cellLst[i][j].getCellColor() == 0 && cellLst[i][j].getNodeVal() >= value){
-					tmp = cellLst[i][j].noAdjColored(cellLst) ; 
-					if(value == cellLst[i][j].getNodeVal()){
-						if( tmp > count){
-							pos = cellLst[i][j].getPosition();
-							value = cellLst[i][j].getNodeVal();
-							count = tmp;
-						}
-					}
-					else{
-						pos = cellLst[i][j].getPosition();
-						value = cellLst[i][j].getNodeVal();
-						count = tmp;
-					}
+				tmp1 = cellLst[i][j].noAdjColored(cellLst);
+				tmp = cellLst[i][j].getNodeVal() ; 
+				if(cellLst[i][j].getCellColor() == 0 && tmp1 + tmp > value){
+					pos = cellLst[i][j].getPosition();
+					value = tmp1+tmp;
 				}
 			}
 		return pos;
 	}
 	*/
+	/**
+	 * Heuristic : FIRST + FOURTH 
+	 */
+	private static Coordinate getFirstNonColored6(){
+		int i, j, value = -1, tmp, tmp1;
+		Coordinate pos = null;
+		for( i = 0; i < rowSize; ++i)
+			for( j = 0; j < colSize; ++j){
+				tmp1 = cellLst[i][j].noAdjColored(cellLst);
+				tmp = cellLst[i][j].getActiveWalls(); 
+				if(cellLst[i][j].getCellColor() == 0 && tmp1 + tmp > value){
+					pos = cellLst[i][j].getPosition();
+					value = tmp1 + tmp;
+				}
+			}
+		return pos;
+	}
+	
+	/**
+	 * Heuristic : THIRD + FOURTH 
+	 */
+	private static Coordinate getFirstNonColored7(){
+		int i, j, value = -2, tmp, tmp1;
+		Coordinate pos = null;
+		for( i = 0; i < rowSize; ++i)
+			for( j = 0; j < colSize; ++j){
+				tmp1 = cellLst[i][j].getNodeVal();
+				tmp = cellLst[i][j].getActiveWalls(); 
+				if(cellLst[i][j].getCellColor() == 0 && tmp1 + tmp > value){
+					pos = cellLst[i][j].getPosition();
+					value = tmp1 + tmp;
+				}
+			}
+		return pos;
+	}
 	
 	/**
 	 * Function to undo the changes made by the Back Tracking if it did not result in correct solution
